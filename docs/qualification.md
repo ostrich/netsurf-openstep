@@ -43,12 +43,13 @@ with actual page captures, two server-observed HTTPS requests for fetch/reload,
 normal application exit, native halt and a clean stopped filesystem.
 
 The fix belongs in the external compiler toolchain. No application-source
-workaround is needed. The candidate compiler is qualified for this regression
-and browser batch; the canonical installed compiler has not been promoted.
-A coherent compiler/runtime update remains necessary before making it the
-default or distributing an updated toolchain. The startup column records the
-earlier ordinary-build startup runs; it is not a claim of an already rebuilt
-and released canonical snapshot.
+workaround is needed. The corrected compiler has now been promoted in a
+coherent NIHS compiler/runtime snapshot after installed-driver and guest
+runtime qualification. Its manifest SHA-256 is
+`5f965b7f3249ceb37ace506162754dd524269067d1ec58e89c9cdf53a2cc379f`.
+The browser results above remain the original candidate-compiler run, rather
+than a repeated browser build with the promoted snapshot. The startup column
+records earlier ordinary-build startup runs; no browser release is implied.
 
 Minimal AppKit controls also passed with native and cross compilers, including
 an Application subclass, View instance-variable offsets and a ScrollView.

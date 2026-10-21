@@ -194,5 +194,5 @@ Intel fixture's 640x480 VGA desktop. Larger desktops retain the existing
 The 68k drawing/resize failure was traced to GCC 16.2's m68k floating-point
 caller-save handling. A compiler-level fix, retaining normal optimization,
 passes the controlled GUI and HTTP/TLS batch. The external canonical toolchain
-still needs its coherent update and promotion; this fork carries no browser
-source workaround for that compiler defect.
+now includes that fix in a qualified NIHS compiler/runtime snapshot. This fork
+carries no browser source workaround for that compiler defect.

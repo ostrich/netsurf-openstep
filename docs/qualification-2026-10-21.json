@@ -43,8 +43,9 @@
       "gui_binary_sha256": "b7cde5fdd03a37d5584c6a9c7aa346099c8371873f4643858cebb111e8b6333f",
       "gui_compiler": "GCC 16.2 with corrected m68k hardware-FP mode changes",
       "gui_optimization": "-O2, caller saves enabled",
-      "canonical_compiler_promoted": false,
-      "https_fetch_and_reload": "Two TLS 1.3 /secure requests observed by the host fixture"
+      "canonical_compiler_promoted": true,
+      "https_fetch_and_reload": "Two TLS 1.3 /secure requests observed by the host fixture",
+      "promoted_toolchain_manifest_sha256": "5f965b7f3249ceb37ace506162754dd524269067d1ec58e89c9cdf53a2cc379f"
     },
     "hppa": {
       "ordinary_binary_sha256": "ae1d4c4ff6f68d8c20714493c004fbae4feb5659dde3a3da536104a8cc0d1697",
