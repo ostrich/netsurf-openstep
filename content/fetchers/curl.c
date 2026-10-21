@@ -115,6 +115,7 @@
 #endif
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
+#include "content/fetchers/curl-identity.h"
 #ifdef NETSURF_OPENSSL_RESTORE_APPLE
 #undef __APPLE__
 #undef NETSURF_OPENSSL_RESTORE_APPLE
@@ -785,9 +786,9 @@ static int fetch_curl_cert_verify_callback(X509_STORE_CTX *x509_ctx, void *parm)
 	vparam = X509_STORE_CTX_get0_param(x509_ctx);
 	X509_VERIFY_PARAM_set_hostflags(vparam, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
 
-	ok = X509_VERIFY_PARAM_set1_host(vparam,
-					 lwc_string_data(f->host),
-					 lwc_string_length(f->host));
+	ok = fetch_curl_set_expected_identity(vparam,
+					    lwc_string_data(f->host),
+					    lwc_string_length(f->host));
 
 	/* Store fetch struct in context for verify callback */
 	if (ok) {
