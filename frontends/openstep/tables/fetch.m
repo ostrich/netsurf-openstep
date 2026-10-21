@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#import <Foundation/Foundation.h>
-#import <AppKit/AppKit.h>
+#import "Platform.h"
 #import <stdio.h>
 #import <stdlib.h>
 #import <string.h>

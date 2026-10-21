@@ -22,7 +22,9 @@
 
 #import <libnsfb.h>
 #import <libnsfb_plot.h>
+#ifndef NETSURF_NEXTSTEP
 #import <AppKit/NSGraphics.h>
+#endif
 
 #import "netsurf/browser_window.h"
 #import "netsurf/plotters.h"
@@ -221,7 +223,12 @@ BOOL openstep_framebuffer_render_browser(struct browser_window *browser,
 	planes[2] = NULL;
 	planes[3] = NULL;
 	planes[4] = NULL;
+#ifdef NETSURF_NEXTSTEP
+	NXRect destination = NSMakeRect(0, 0, openstep_fb_width, openstep_fb_height);
+	NXDrawBitmap(&destination,
+#else
 	NSDrawBitmap(NSMakeRect(0, 0, openstep_fb_width, openstep_fb_height),
+#endif
 			openstep_fb_width,
 			openstep_fb_height,
 			8,
@@ -230,7 +237,11 @@ BOOL openstep_framebuffer_render_browser(struct browser_window *browser,
 			openstep_fb_width * 4,
 			NO,
 			YES,
+#ifdef NETSURF_NEXTSTEP
+			NX_RGBColorSpace,
+#else
 			NSDeviceRGBColorSpace,
+#endif
 			planes);
 	return YES;
 }

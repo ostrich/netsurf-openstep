@@ -19,7 +19,7 @@
 #ifndef NETSURF_OPENSTEP_FRAMEBUFFER_RENDERER_H
 #define NETSURF_OPENSTEP_FRAMEBUFFER_RENDERER_H
 
-#import <AppKit/AppKit.h>
+#import "Platform.h"
 
 struct browser_window;
 

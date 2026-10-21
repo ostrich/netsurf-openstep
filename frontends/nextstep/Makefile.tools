@@ -1,0 +1,3 @@
+# The host recipe supplies a resolved cross compiler and host generators.
+PKG_CONFIG ?= pkg-config
+CCACHE :=

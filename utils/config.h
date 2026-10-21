@@ -213,4 +213,16 @@ char *realpath(const char *path, char *resolved_path);
 	#define NO_IPV6
 #endif
 
+/* NEXTSTEP cross builds use the qualified NextStepCompat implementations,
+ * rather than the native OPENSTEP port's fallback definitions. */
+#ifdef NETSURF_NEXTSTEP
+#define HAVE_STRNDUP
+#define HAVE_STRCASESTR
+#define HAVE_STRTOULL
+#define HAVE_REALPATH
+#define HAVE_REGEX
+#define HAVE_UTSNAME
+#undef HAVE_STRPTIME
+#endif
+
 #endif

@@ -51,6 +51,13 @@
 #include "netsurf/inttypes.h"
 #include "utils/nsurl.h"
 #include "utils/dirent.h"
+
+#ifdef NETSURF_NEXTSTEP
+/* Native scandir uses the BSD directory-entry ABI, not the POSIX tag. */
+typedef struct direct fetch_file_dirent;
+#else
+typedef struct dirent fetch_file_dirent;
+#endif
 #include "utils/corestrings.h"
 #include "utils/messages.h"
 #include "utils/utils.h"
@@ -536,7 +543,7 @@ static char *gen_nice_title(char *path)
  */
 static nserror
 process_dir_ent(struct fetch_file_context *ctx,
-		 struct dirent *ent,
+		 fetch_file_dirent *ent,
 		 bool even,
 		 char *buffer,
 		 size_t buffer_len)
@@ -633,7 +640,7 @@ process_dir_ent(struct fetch_file_context *ctx,
  * \param d1 first directory entry
  * \param d2 second directory entry
  */
-static int dir_sort_alpha(const struct dirent **d1, const struct dirent **d2)
+static int dir_sort_alpha(const fetch_file_dirent **d1, const fetch_file_dirent **d2)
 {
 	const char *s1 = (*d1)->d_name;
 	const char *s2 = (*d2)->d_name;
@@ -676,7 +683,7 @@ static void fetch_file_process_dir(struct fetch_file_context *ctx,
 	nserror err; /* result from url routines */
 	nsurl *up; /* url of parent */
 
-	struct dirent **listing = NULL; /* directory entry listing */
+	fetch_file_dirent **listing = NULL; /* directory entry listing */
 	int i; /* directory entry index */
 	int n; /* number of directory entries */
 

@@ -17,10 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#import <Foundation/Foundation.h>
-#import <AppKit/AppKit.h>
+#import "Platform.h"
 
-#import "AppDelegate.h"
 #import "BrowserWindowController.h"
 #import "netsurf/browser_window.h"
 #import "netsurf/netsurf.h"
@@ -44,6 +42,10 @@ static struct gui_window *openstep_window_create(struct browser_window *bw,
 			struct gui_window *existing,
 			gui_window_create_flags flags) {
 	BrowserWindowController *controller = nil;
+	struct window_handle *window = malloc(sizeof(*window));
+	if (window == NULL) {
+		return NULL;
+	}
 	(void)existing;
 	(void)flags;
 	if ([BrowserWindowController pendingBrowserTarget] != nil) {
@@ -56,7 +58,6 @@ static struct gui_window *openstep_window_create(struct browser_window *bw,
 		[controller loadWindow];
 	}
 	[BrowserWindowController setPendingBrowserTarget: nil];
-	struct window_handle *window = malloc(sizeof (struct window_handle));
 	window->window = controller;
 	return (struct gui_window*)window;
 }
@@ -137,19 +138,19 @@ static nserror openstep_window_event(struct gui_window *gw, enum gui_window_even
 
 static void openstep_window_set_title(struct gui_window *gw, const char *title) {
 	struct window_handle *window = (struct window_handle*)gw;
-	[window->window setTitle: [NSString stringWithCString: title]];
+	[window->window setTitle: netsurf_string_from_utf8(title)];
 }
 
 static nserror openstep_window_set_url(struct gui_window *gw, struct nsurl *url) {
 	struct window_handle *window = (struct window_handle*)gw;
-	NSString *urlStr = [NSString stringWithCString: nsurl_access(url)];
+	NSString *urlStr = netsurf_string_from_utf8(nsurl_access(url));
 	[window->window setNavigationUrl: urlStr];
 	return NSERROR_OK;
 }
 
 static void openstep_window_set_status(struct gui_window *gw, const char *text) {
 	struct window_handle *window = (struct window_handle*)gw;
-	NSString *statusText = text ? [NSString stringWithCString: text] : @"";
+	NSString *statusText = text ? netsurf_string_from_utf8(text) : @"";
 	[window->window setStatusText: statusText];
 }
 
@@ -175,7 +176,7 @@ static void openstep_window_create_form_select_menu(struct gui_window *gw, struc
 	}
 	NSMutableArray *options = [NSMutableArray array];
 	for(opt = form_select_get_option(control, 0); opt != NULL; opt = opt->next) {
-		[options addObject: [NSString stringWithCString: opt->text]];
+		[options addObject: netsurf_string_from_utf8(opt->text)];
 	}
 	[window->window showDropdownMenuWithOptions: options atLocation:
 		NSMakePoint(rect.x0, rect.y1) control: control];

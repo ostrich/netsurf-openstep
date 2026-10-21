@@ -23,7 +23,9 @@ S_UTILS := \
 	utils.c
 
 ifeq ($(HOST),NeXT)
+ifneq ($(TARGET),nextstep)
 S_UTILS += openstep_compat.c
+endif
 endif
 
 S_UTILS := $(addprefix utils/,$(S_UTILS))

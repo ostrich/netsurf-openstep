@@ -785,8 +785,8 @@ static bool html_redraw_background(int x, int y, struct box *box, float scale,
 
 				bg_data.x = x;
 				bg_data.y = y;
-				bg_data.width = ceilf(width * scale);
-				bg_data.height = ceilf(height * scale);
+				bg_data.width = ceil(width * scale);
+				bg_data.height = ceil(height * scale);
 				bg_data.background_colour = *background_colour;
 				bg_data.scale = scale;
 				bg_data.repeat_x = repeat_x;
@@ -945,8 +945,8 @@ static bool html_redraw_inline_background(int x, int y, struct box *box,
 
 			bg_data.x = x;
 			bg_data.y = y;
-			bg_data.width = ceilf(width * scale);
-			bg_data.height = ceilf(height * scale);
+			bg_data.width = ceil(width * scale);
+			bg_data.height = ceil(height * scale);
 			bg_data.background_colour = *background_colour;
 			bg_data.scale = scale;
 			bg_data.repeat_x = repeat_x;

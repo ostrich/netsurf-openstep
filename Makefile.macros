@@ -195,7 +195,7 @@ define compile_target_c
 $$(OBJROOT)/$(2): $(1) $$(OBJROOT)/created $$(DEPROOT)/created
 	$$(VQ)echo "     DEP: $(1)"
 	$$(Q)$$(RM) $$(DEPROOT)/$(3)
-	$$(Q)$$(CC) $$(IFLAGS) $$(CFLAGS) -MM  \
+	$$(Q)$$(CC) $$(IFLAGS) $$(CFLAGS) -E -MM  \
 		    $(1) | sed 's,^.*:,$$(DEPROOT)/$(3) $$(OBJROOT)/$(2):,' \
 		    > $$(DEPROOT)/$(3)
 	$$(VQ)echo " COMPILE: $(1)"
@@ -209,7 +209,7 @@ define compile_target_c
 $$(OBJROOT)/$(2): $(1) $$(OBJROOT)/created $$(DEPROOT)/created
 	$$(VQ)echo "     DEP: $(1)"
 	$$(Q)$$(RM) $$(DEPROOT)/$(3)
-	$$(Q)$$(CC) $$(IFLAGS) $$(CFLAGS) -MM  \
+	$$(Q)$$(CC) $$(IFLAGS) $$(CFLAGS) -E -MM  \
 		    $(1) | sed 's,^.*:,$$(DEPROOT)/$(3) $$(OBJROOT)/$(2):,' \
 		    > $$(DEPROOT)/$(3)
 	$$(VQ)echo " COMPILE: $(1)"
@@ -240,7 +240,7 @@ define compile_target_cpp
 $$(OBJROOT)/$(2): $(1) $$(OBJROOT)/created $$(DEPROOT)/created
 	$$(VQ)echo "     DEP: $(1)"
 	$$(Q)$$(RM) $$(DEPROOT)/$(3)
-	$$(Q)$$(CC) $$(IFLAGS) $$(CXXFLAGS) $$(COMMON_WARNFLAGS) $$(CXXWARNFLAGS) -MM  \
+	$$(Q)$$(CC) $$(IFLAGS) $$(CXXFLAGS) $$(COMMON_WARNFLAGS) $$(CXXWARNFLAGS) -E -MM  \
 		    $(1) | sed 's,^.*:,$$(DEPROOT)/$(3) $$(OBJROOT)/$(2):,' \
 		    > $$(DEPROOT)/$(3)
 	$$(VQ)echo " COMPILE: $(1)"
@@ -258,7 +258,7 @@ define compile_target_m
 $$(OBJROOT)/$(2): $(1) $$(OBJROOT)/created $$(DEPROOT)/created $$(FRAMEWORK_INCLUDE_CREATED)
 	$$(VQ)echo "     DEP: $(1)"
 	$$(Q)$$(RM) $$(DEPROOT)/$(3)
-	$$(Q)$$(OBJC_CC) $$(IFLAGS) $$(OBJCFLAGS) -MM  \
+	$$(Q)$$(OBJC_CC) $$(IFLAGS) $$(OBJCFLAGS) -E -MM  \
 		    $(1) | sed 's,^.*:,$$(DEPROOT)/$(3) $$(OBJROOT)/$(2):,' \
 		    > $$(DEPROOT)/$(3)
 	$$(VQ)echo " OBJC: $(1)"

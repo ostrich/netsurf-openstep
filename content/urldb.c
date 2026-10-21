@@ -690,7 +690,13 @@ static bool urldb__host_is_ip_address(const char *host)
 	if (strspn(sane_host, "0123456789abcdefABCDEF[].:") < host_len)
 		goto out_false;
 
+	#ifdef NETSURF_NEXTSTEP
+	/* This check accepts full dotted quads only; inet_pton supplies exactly
+	 * that interface on NEXTSTEP through NextStepCompat. */
+	if (inet_pton(AF_INET, sane_host, &ipv4) == 1) {
+#else
 	if (inet_aton(sane_host, &ipv4) != 0) {
+#endif
 		/* This can only be a sane IPv4 address if it contains 3 dots.
 		 * Helpfully, inet_aton is happy to treat "a", "a.b", "a.b.c",
 		 * and "a.b.c.d" as valid IPv4 address strings where we only

@@ -18,15 +18,23 @@
  */
 
 
-#import <AppKit/AppKit.h>
+#import "Platform.h"
 #import "netsurf/netsurf.h"
 #import "netsurf/mouse.h"
 
 struct browser_window;
 struct form_control;
 
+#ifdef NETSURF_NEXTSTEP
+@interface BrowserWindowController : NSObject {
+#else
 @interface BrowserWindowController : NSObject<NSTextFieldDelegate> {
+#endif
+#ifdef NETSURF_NEXTSTEP
+	Window *window;
+#else
 	NSWindow *window;
+#endif
 	id backButton;
 	id forwardButton;
 	id urlBar;
