@@ -1,0 +1,11 @@
+--- a/contrib/tools/pngcp.c
++++ b/contrib/tools/pngcp.c
+@@ -269,7 +269,7 @@
+ };
+ #endif /* IDAT compression */
+ 
+-typedef struct option
++typedef struct pngcp_option
+ {
+    const char       *name;         /* name of the option */
+    png_uint_32       opt;          /* an option, or OPTION or LIST */

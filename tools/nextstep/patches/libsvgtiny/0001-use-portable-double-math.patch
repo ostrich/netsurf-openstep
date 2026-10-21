@@ -1,0 +1,33 @@
+--- a/src/svgtiny.c
++++ b/src/svgtiny.c
+@@ -441,8 +441,8 @@
+ 	}
+ 
+ 	/* obtain the absolute values of the radii */
+-	rx = fabsf(rx);
+-	ry = fabsf(ry);
++	rx = fabs(rx);
++	ry = fabs(ry);
+ 
+ 	/* convert normalised angle to radians */
+ 	radangle = degToRad(fmod(angle, 360.0));
+@@ -2179,7 +2179,7 @@
+ 	shape->text = 0;
+ 	shape->fill = state->fill;
+ 	shape->stroke = state->stroke;
+-	shape->stroke_width = lroundf((float) state->stroke_width *
++	shape->stroke_width = lround((float) state->stroke_width *
+ 			(state->ctm.a + state->ctm.d) / 2.0);
+ 	if (0 < state->stroke_width && shape->stroke_width == 0)
+ 		shape->stroke_width = 1;
+--- a/src/svgtiny_gradient.c
++++ b/src/svgtiny_gradient.c
+@@ -489,7 +489,7 @@
+ 		if(isnan(r0) || isnan(r1)) {
+ 			steps = 1;
+ 		} else {
+-			steps = ceilf(fabsf(r1 - r0) / 0.05);
++			steps = ceil(fabs(r1 - r0) / 0.05);
+ 		}
+ 
+ 		if (steps == 0)

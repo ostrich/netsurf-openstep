@@ -26,3 +26,6 @@ nsfb-*
 build
 dist
 __pycache__/
+
+# Local dependency sources, private SDK configuration and build evidence
+/work/

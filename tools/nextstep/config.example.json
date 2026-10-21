@@ -1,0 +1,12 @@
+{
+  "toolchain": "/path/to/toolchain/install/current",
+  "sdk": "/path/to/private/nextstep33-sdk",
+  "appkit": "/path/to/private/libNeXT_s.a",
+  "foundation": "/path/to/private/libFoundation_s.a",
+  "external_prefixes": {
+    "m68k": "/path/to/qualified-dependencies/m68k",
+    "i386": "/path/to/qualified-dependencies/i386",
+    "hppa": "/path/to/qualified-dependencies/hppa",
+    "sparc": "/path/to/qualified-dependencies/sparc"
+  }
+}

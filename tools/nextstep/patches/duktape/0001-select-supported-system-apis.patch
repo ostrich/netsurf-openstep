@@ -1,0 +1,24 @@
+--- a/src/duk_config.h
++++ b/src/duk_config.h
+@@ -867,6 +867,12 @@
+ #define DUK_USE_OS_STRING "unknown"
+ #endif  /* autodetect platform */
+ 
++/* NEXTSTEP has no strptime. ISO 8601 parsing remains available; optional
++ * locale-dependent date parsing cannot use a missing system API. */
++#if defined(__NeXT__) || defined(NeXT)
++#undef DUK_USE_DATE_PRS_STRPTIME
++#endif
++
+ /* Shared includes: C89 */
+ #include <stdio.h>
+ #include <stdlib.h>
+@@ -2417,7 +2423,7 @@
+  * that too.  Android doesn't have log2; disable all of these for Android.
+  */
+ #if (defined(DUK_F_C99) || defined(DUK_F_CPP11) || (defined(_MSC_VER) && (_MSC_VER >= 1800))) && \
+-    !defined(DUK_F_ANDROID) && !defined(DUK_F_MINT)
++    !defined(DUK_F_ANDROID) && !defined(DUK_F_MINT) && !defined(__NeXT__) && !defined(NeXT)
+ #if !defined(DUK_CBRT)
+ #define DUK_CBRT             cbrt
+ #endif

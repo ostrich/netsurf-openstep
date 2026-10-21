@@ -6,6 +6,18 @@ This fork aims at getting a usable version of NetSurf running under OPENSTEP.
 
 To build, run `gnumake HOST=NeXT TARGET=openstep`.
 
+NEXTSTEP 3.3 port
+----------------
+
+The `nextstep33` branch adds a native NEXTSTEP AppKit frontend and Linux-hosted
+build tools for NeXT 68k, Intel, HPPA and SPARC. The existing OPENSTEP frontend
+remains available. Build instructions, required dependencies and validation
+scope are in [the NEXTSTEP port guide](docs/nextstep-port.md).
+
+Browser-engine modernization is separate from this platform port. Keep both
+lines of work in this fork, on separate branches, so platform fixes can be
+reviewed and submitted independently.
+
 Standalone OPENSTEP release
 ---------------------------
 

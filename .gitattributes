@@ -2,3 +2,6 @@
 .gitattributes export-ignore
 *.pl text eol=lf
 *.bnd text eol=lf
+
+# Unified diffs retain whitespace from the upstream source context.
+tools/nextstep/patches/**/*.patch -whitespace
