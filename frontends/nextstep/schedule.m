@@ -39,6 +39,8 @@ static void perform_callback(DPSTimedEntry timer, double now, void *context)
 	 * node before invoking application code so no stale timer owns it. */
 	free(item);
 	function(argument);
+	/* Timed entries can invalidate views without delivering an NXEvent. */
+	nextstep_display_windows();
 	[pool release];
 }
 

@@ -56,4 +56,6 @@ static inline NSRect NSMakeRect(float x, float y, float width, float height)
 #define NSMaxX(rect) ((rect).origin.x + (rect).size.width)
 #define NSMaxY(rect) ((rect).origin.y + (rect).size.height)
 
+void nextstep_display_windows(void);
+
 #endif

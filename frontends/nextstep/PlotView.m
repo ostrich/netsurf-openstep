@@ -7,6 +7,8 @@
 #include "netsurf/browser_window.h"
 #include "netsurf/keypress.h"
 #include "netsurf/mouse.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 static browser_mouse_state modifiers(NXEvent *event)
 {
@@ -25,9 +27,23 @@ static browser_mouse_state modifiers(NXEvent *event)
 	[self setOpaque:YES];
 	return self;
 }
+- setNeedsDisplay:(BOOL)flag
+{
+	needs_redraw = flag;
+	return [super setNeedsDisplay:flag];
+}
+- displayPendingContent
+{
+	if (needs_redraw && [self canDraw]) {
+		needs_redraw = NO;
+		[self display];
+	}
+	return self;
+}
 - setBrowser:(struct browser_window *)value
 {
 	browser = value;
+	[self setNeedsDisplay:YES];
 	return self;
 }
 - placeCaretAtX:(int)x y:(int)y height:(int)height
@@ -49,6 +65,12 @@ static browser_mouse_state modifiers(NXEvent *event)
 	(void)rects;
 	(void)count;
 	[self getVisibleRect:&visible];
+	if (getenv("NETSURF_STARTUP_TRACE")) {
+		static unsigned count;
+		if (count++ < 8) fprintf(stderr, "NetSurf: draw browser=%p visible=%g,%g %gx%g\n",
+			(void *)browser, visible.origin.x, visible.origin.y,
+			visible.size.width, visible.size.height);
+	}
 	PSsetgray(1);
 	NXRectFill(&visible);
 	if (browser != NULL)

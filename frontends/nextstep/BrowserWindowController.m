@@ -51,6 +51,7 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	[(Window *)window setTitle:"NetSurf"];
 	[window setFreeWhenClosed:NO];
 	[window setDelegate:self];
+	[window addToEventMask:NX_MOUSEMOVEDMASK];
 	content = [window contentView];
 	rect = NSMakeRect(0, 440, 720, 40);
 	toolbar = [[View alloc] initFrame:&rect];
@@ -84,7 +85,9 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	[scrollView setDocView:plotView];
 	[content setAutoresizeSubviews:YES];
 	[window makeFirstResponder:plotView];
+	[window display];
 	[window makeKeyAndOrderFront:self];
+	[window flushWindow];
 }
 - (void)attachBrowser:(struct browser_window *)value
 {
@@ -93,6 +96,12 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 }
 - (struct browser_window *)browser { return browser; }
 - (Window *)nativeWindow { return window; }
+- (void)displayBrowserIfNeeded
+{
+	[plotView displayPendingContent];
+	[window displayIfNeeded];
+	[window flushWindow];
+}
 - (void)dealloc
 {
 	[window setDelegate:nil];
@@ -102,6 +111,8 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 - windowWillClose:sender
 {
 	(void)sender;
+	/* A core-initiated close already owns registry removal and release. */
+	if (isClosing) return self;
 	isClosing = YES;
 	if (browser != NULL) browser_window_destroy(browser);
 	else { [nextstep_browser_windows removeObject:self]; [self autorelease]; }
@@ -145,7 +156,13 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 }
 - (void)setBrowserScroll:(NSPoint)point { [plotView scrollPoint:&point]; }
 - (void)invalidateBrowser { [plotView setNeedsDisplay:YES]; }
-- (void)invalidateBrowser:(NSRect)rect { [plotView invalidate:&rect :1]; }
+- (void)invalidateBrowser:(NSRect)rect
+{
+	(void)rect;
+	/* Native invalidate:: concerns scrolling validity, not Cocoa-style dirty
+	 * rectangles. Mark the view for drawing; optimize dirty regions later. */
+	[plotView setNeedsDisplay:YES];
+}
 - (void)updateBrowserExtent
 {
 	int width, height;
@@ -224,3 +241,12 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	NSLOG(netsurf, WARNING, "Native select menu requested despite core_select_menu");
 }
 @end
+
+/* Coalesce core invalidations after an event or DPS timed callback. Old AppKit
+ * may not traverse buffered windows when only a document subview is dirty. */
+void nextstep_display_windows(void)
+{
+	unsigned i;
+	for (i = 0; i < [nextstep_browser_windows count]; i++)
+		[[nextstep_browser_windows objectAtIndex:i] displayBrowserIfNeeded];
+}

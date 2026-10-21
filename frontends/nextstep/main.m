@@ -47,7 +47,18 @@ static nserror defaults(struct nsoption_s *options)
 
 @interface NextstepApplication : Application
 @end
+@interface BrowserWindowController (NativeWindow)
+- (Window *)nativeWindow;
+- (void)displayBrowserIfNeeded;
+@end
+
 @implementation NextstepApplication
+- updateWindows
+{
+	[super updateWindows];
+	nextstep_display_windows();
+	return self;
+}
 - sendEvent:(NXEvent *)event
 {
 	NSAutoreleasePool *pool = [NSAutoreleasePool new];
@@ -55,10 +66,6 @@ static nserror defaults(struct nsoption_s *options)
 	[pool release];
 	return self;
 }
-@end
-
-@interface BrowserWindowController (NativeWindow)
-- (Window *)nativeWindow;
 @end
 
 static BrowserWindowController *front_browser(void)
@@ -146,6 +153,13 @@ int main(int argc, char **argv)
 		.utf8 = framebuffer_utf8_table
 	};
 	startup_trace = getenv("NETSURF_STARTUP_TRACE") != NULL;
+	/* Establish AppKit's desktop context before starting core DPS timers. */
+	if (!smoke) {
+		TRACE("creating Application");
+		app = [NextstepApplication new];
+		if (app == nil) return failed("Application initialization", 1);
+		TRACE("Application created");
+	}
 	TRACE("initializing browser core");
 	nslog_init(NULL, &argc, argv);
 	error = netsurf_register(&table);
@@ -172,10 +186,19 @@ int main(int argc, char **argv)
 		[pool release];
 		return status;
 	}
-	if (argc > 1) initial_url = [[NSString stringWithCString:argv[1]] retain];
-	TRACE("creating Application");
-	app = [NextstepApplication new];
-	TRACE("Application created");
+	/* Workspace supplies -NX... defaults as argument pairs. They are not
+	 * navigation URLs; AppKit still consumes them from the process arguments. */
+	{
+		int i;
+		for (i = 1; i < argc; i++) {
+			if (strncmp(argv[i], "-NX", 3) == 0) { if (i + 1 < argc) i++; continue; }
+			if (strncmp(argv[i], "http:", 5) == 0 || strncmp(argv[i], "https:", 6) == 0 ||
+				strncmp(argv[i], "file:", 5) == 0 || strncmp(argv[i], "about:", 6) == 0) {
+				initial_url = [[NSString stringWithCString:argv[i]] retain];
+				break;
+			}
+		}
+	}
 	delegate = [NextstepDelegate new];
 	[app setDelegate:delegate];
 	menu = [[Menu alloc] initTitle:"NetSurf"];
