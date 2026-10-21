@@ -184,10 +184,11 @@ BOOL openstep_framebuffer_render_browser(struct browser_window *browser,
 	clip.y1 = NSMaxY(rect);
 
 	previous = framebuffer_set_surface(openstep_fb_surface);
+	fb_plotters.clip(&ctx, &clip);
 	clear_style.stroke_type = PLOT_OP_TYPE_NONE;
 	clear_style.fill_type = PLOT_OP_TYPE_SOLID;
 	clear_style.fill_colour = 0x00ffffff;
-	fb_plotters.rectangle(&ctx, &clip, &clear_style);
+	fb_plotters.rectangle(&ctx, &clear_style, &clip);
 	browser_window_redraw(browser, 0, 0, &clip, &ctx);
 
 	if (showCaret) {
