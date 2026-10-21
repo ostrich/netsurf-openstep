@@ -31,7 +31,14 @@ On 68k, document loading, JavaScript/pasteboard assertions and form callbacks
 succeeded, but the displayed window remained blank and the resize operation
 stalled until the watchdog. The ordinary startup and real external HTTP/TLS
 checks passed. This remains an application/AppKit/compiler/emulator boundary
-to isolate; it is not attributed to Previous without further evidence. The GUI
+to isolate; it is not attributed to Previous without further evidence.
+A subsequent minimal AppKit control passed with both the guest's GCC 2.5.8
+and the Linux-hosted GCC 16.2 compiler in the same 68k session: initial drawing,
+explicit redisplay, window resize and drawing at the new dimensions all worked.
+Both binaries logged three draw calls and the same final 442x332 window frame;
+host video also shows the colored rectangle. This rules out a general failure
+of basic native AppKit drawing/resizing in this guest. It does not qualify the
+browser's Foundation, ScrollView, framebuffer or timer interactions. The GUI
 batch correctly reports failure and performs native shutdown afterward.
 
 The earlier isolated Intel OPENSTEP 4.2 desktop rendered the controlled page
@@ -115,3 +122,25 @@ load the fixture CA. Build and run their independent `--smoke-test` startup
 batch after the qualification build. The pre-existing OPENSTEP desktop check
 is useful regression evidence, but does not replace rebuilding the original
 GCC 4.2 OPENSTEP lane after shared fetcher changes.
+
+
+## Minimal 68k AppKit control
+
+`test/nextstep/appkit-probe.m` uses only native AppKit and system libraries.
+It creates a buffered window, a custom drawing view and a TextField, then
+redisplays and resizes it using bounded timed entries. There is no NetSurf,
+Foundation or NextStepCompat implementation in the probe. The guest helper
+supplies the freshly acquired Workspace bootstrap namespace to both binaries.
+
+`tools/nextstep/prepare-appkit-control.py --help` lists the explicit compiler,
+SDK/import library, test-helper, runtime-directory and external VM-project
+inputs. It prepares one stopped disposable clone. The guest compiles the same
+source with `/bin/cc -O2 -lNeXT_s` and runs native and cross-built executables
+sequentially. Invoke the external `run-guests.py` with `--arch m68k --timeout 400`
+and capture its isolated X display if pixel evidence is required. Each program
+has a 60-second watchdog. Check both completion/draw logs, actual screenshots,
+native halt and the collected filesystem check.
+
+The 2026-10-21 control batch passed, exited through native halt and had a clean
+stopped filesystem. The result checks require successful drawing and resize markers in addition
+to application exit status.

@@ -77,3 +77,20 @@ Recovery: let the watchdog terminate a failed application, then perform native
 halt and collect logs only after the emulator closes its disks. A failed boot
 that cannot reach native halt must be labelled unqualified; preserve its logs
 and never inspect an image while the emulator owns it.
+
+
+## 68k native AppKit drawing/resize control
+
+Verified 2026-10-21 on the owned Previous NEXTSTEP 3.3 color guest, 68040,
+128 MiB, 1120x880 isolated host X display. Start from a stopped prepared clone;
+`prepare-appkit-control.py` stages identical source and the optimized host-built
+executable. The native guest compiler builds the other executable. Both inherit
+the same freshly observed Workspace bootstrap namespace through desktop-exec.
+
+The native control runs before the cross-built control. Each draws a green
+rectangle on a white view, redisplays, resizes and exits automatically. Workspace
+can overlap their windows, so capture visible document pixels and compare the
+native draw/resize logs; a covered title is not a reliable identification anchor.
+The source deliberately avoids Foundation, scroll views and browser code.
+Readiness is the explicit draw/resize/completion sequence, not a fixed boot delay.
+Normal recovery is the per-process watchdog followed by the runner's native halt.
