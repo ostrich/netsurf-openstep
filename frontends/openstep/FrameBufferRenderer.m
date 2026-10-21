@@ -19,6 +19,7 @@
 #import "FrameBufferRenderer.h"
 
 #include <stdlib.h>
+#include <limits.h>
 
 #import <libnsfb.h>
 #import <libnsfb_plot.h>
@@ -30,6 +31,14 @@
 #import "netsurf/plotters.h"
 #import "framebuffer/framebuffer.h"
 
+/* The framebuffer is opaque, so the native NX bitmap upload needs only RGB.
+ * Retain the established four-component OPENSTEP upload separately. */
+#ifdef NETSURF_NEXTSTEP
+#define OPENSTEP_UPLOAD_COMPONENTS 3
+#else
+#define OPENSTEP_UPLOAD_COMPONENTS 4
+#endif
+
 static nsfb_t *openstep_fb_surface;
 static unsigned char *openstep_fb_upload;
 static int openstep_fb_upload_size;
@@ -38,8 +47,15 @@ static int openstep_fb_height;
 
 static BOOL openstep_framebuffer_ensure_surface(NSRect rect)
 {
-	int width = (int)NSMaxX(rect);
-	int height = (int)NSMaxY(rect);
+	double right = NSMaxX(rect), bottom = NSMaxY(rect);
+	int width, height;
+
+	/* libnsfb uses signed integer byte counts. Reject non-finite or excessive
+	 * document extents before converting coordinates or multiplying sizes. */
+	if (!(right >= 0 && bottom >= 0 &&
+			right <= INT_MAX / 4 && bottom <= INT_MAX / 4)) return NO;
+	width = (int)right;
+	height = (int)bottom;
 
 	if (width < 1) {
 		width = 1;
@@ -47,6 +63,8 @@ static BOOL openstep_framebuffer_ensure_surface(NSRect rect)
 	if (height < 1) {
 		height = 1;
 	}
+
+	if (width > INT_MAX / 4 / height) return NO;
 
 	if (openstep_fb_surface != NULL &&
 			width == openstep_fb_width &&
@@ -91,7 +109,7 @@ static BOOL openstep_framebuffer_ensure_surface(NSRect rect)
 
 static BOOL openstep_framebuffer_ensure_upload_buffer(void)
 {
-	int size = openstep_fb_width * openstep_fb_height * 4;
+	int size = openstep_fb_width * openstep_fb_height * OPENSTEP_UPLOAD_COMPONENTS;
 	unsigned char *upload;
 
 	if (openstep_fb_upload != NULL && size == openstep_fb_upload_size) {
@@ -111,7 +129,7 @@ static BOOL openstep_framebuffer_ensure_upload_buffer(void)
 	return YES;
 }
 
-static void openstep_framebuffer_repack_xrgb_to_rgba(unsigned char *src,
+static void openstep_framebuffer_repack_xrgb(unsigned char *src,
 		int srcStride)
 {
 	int x;
@@ -121,14 +139,16 @@ static void openstep_framebuffer_repack_xrgb_to_rgba(unsigned char *src,
 	for (y = 0; y < openstep_fb_height; y++) {
 		unsigned char *srcRow = src + y * srcStride;
 		unsigned char *dstRow = openstep_fb_upload +
-				y * openstep_fb_width * 4;
+				y * openstep_fb_width * OPENSTEP_UPLOAD_COMPONENTS;
 
 		for (x = 0; x < openstep_fb_width; x++) {
-			dst = dstRow + x * 4;
+			dst = dstRow + x * OPENSTEP_UPLOAD_COMPONENTS;
 			dst[0] = srcRow[x * 4 + 2];
 			dst[1] = srcRow[x * 4 + 1];
 			dst[2] = srcRow[x * 4 + 0];
+#ifndef NETSURF_NEXTSTEP
 			dst[3] = 0xff;
+#endif
 		}
 	}
 }
@@ -147,10 +167,10 @@ static void openstep_framebuffer_apply_gamma_compensation(void)
 
 	for (y = 0; y < openstep_fb_height; y++) {
 		unsigned char *row = openstep_fb_upload +
-				y * openstep_fb_width * 4;
+				y * openstep_fb_width * OPENSTEP_UPLOAD_COMPONENTS;
 
 		for (x = 0; x < openstep_fb_width; x++) {
-			unsigned char *dst = row + x * 4;
+			unsigned char *dst = row + x * OPENSTEP_UPLOAD_COMPONENTS;
 
 			dst[0] = openstep_framebuffer_gamma_compensate(dst[0]);
 			dst[1] = openstep_framebuffer_gamma_compensate(dst[1]);
@@ -215,7 +235,7 @@ BOOL openstep_framebuffer_render_browser(struct browser_window *browser,
 	if (!openstep_framebuffer_ensure_upload_buffer()) {
 		return NO;
 	}
-	openstep_framebuffer_repack_xrgb_to_rgba(buffer, stride);
+	openstep_framebuffer_repack_xrgb(buffer, stride);
 	openstep_framebuffer_apply_gamma_compensation();
 
 	planes[0] = openstep_fb_upload;
@@ -232,11 +252,15 @@ BOOL openstep_framebuffer_render_browser(struct browser_window *browser,
 			openstep_fb_width,
 			openstep_fb_height,
 			8,
-			4,
-			32,
-			openstep_fb_width * 4,
+			OPENSTEP_UPLOAD_COMPONENTS,
+			8 * OPENSTEP_UPLOAD_COMPONENTS,
+			openstep_fb_width * OPENSTEP_UPLOAD_COMPONENTS,
 			NO,
+#ifdef NETSURF_NEXTSTEP
+			NO,
+#else
 			YES,
+#endif
 #ifdef NETSURF_NEXTSTEP
 			NX_RGBColorSpace,
 #else
