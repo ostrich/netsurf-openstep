@@ -70,9 +70,17 @@ conversion including surrogate pairs and malformed input, framebuffer
 registration and byte order, FreeType font loading and JavaScript heap startup.
 All four guests halted natively and passed stopped filesystem checks.
 
-These results do not qualify interactive browsing, HTTP/TLS or a release.
-GUI acceptance and native OPENSTEP build regression testing remain pending.
-The native OPENSTEP frontend remains a separate build lane.
+A separate disposable OPENSTEP 4.2 desktop test launches the NEXTSTEP frontend,
+visibly renders a controlled HTML/CSS page, displays JavaScript-updated DOM text
+and quits cleanly. The clone halts natively and passes its filesystem check.
+This checks the old-AppKit frontend on OPENSTEP; it does not substitute for GUI
+qualification on NEXTSTEP 3.3 itself.
+
+Remaining qualification includes NEXTSTEP GUI sessions, images, forms,
+clipboard, scrolling/resizing, navigation and multiple-window lifetimes,
+HTTP/TLS, and rebuilding the original OPENSTEP frontend with GCC 4.2. The icon
+also produces an old-AppKit TIFF alpha warning. No release is qualified yet.
+The original OPENSTEP frontend remains a separate build lane.
 
 ## Reproducing integration builds
 
@@ -148,3 +156,23 @@ any of the four guest targets. The frontend uses utf8proc and Foundation's
 working UTF-16 constructor, following the approach used by the GSTerminal port.
 This applies to clipboard contents, callback text and typed URLs. The browser's
 own content encoding and FreeType text rendering remain shared with NetSurf.
+
+## Native desktop integration
+
+A guest-agent child lacks the logged-in desktop's Mach bootstrap namespace.
+Changing its Unix account alone does not supply a WindowServer connection.
+The disposable GUI test uses a root-only helper to copy Workspace's namespace,
+drop to the desktop account and exec the browser. This helper is test equipment,
+not part of the application. See [desktop test navigation](ui-navigation.md).
+
+Native AppKit also needs explicit repaint coalescing. The document view records
+pending redraws; the frontend paints and flushes them after DPS callbacks and
+normal window updates. Merely marking a document subview dirty left the loaded
+page invisible. Workspace's `-NX...` argument pairs are kept separate from
+navigation URLs, and core-initiated window closure avoids a second release from
+the native close delegate.
+
+The native bitmap upload uses opaque packed RGB. The original OPENSTEP renderer
+retains RGBA. Both reject excessive framebuffer dimensions before signed size
+arithmetic can overflow; very large documents still need a viewport-sized
+rendering strategy rather than allocating up to their visible document offset.

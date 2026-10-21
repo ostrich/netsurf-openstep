@@ -18,5 +18,5 @@ compiler defects in the toolchain, not by hiding them in application shims.
 
 Use disposable guests for runtime tests. Batch focused checks with bounded
 waits and explicit result markers. Compilation is not runtime qualification.
-Reuse docs/ui-navigation.md if present and the VM project's navigation notes.
+Reuse docs/ui-navigation.md and the VM project's navigation notes.
 The port plan and current scope are in docs/nextstep-port.md.

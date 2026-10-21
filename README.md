@@ -11,8 +11,8 @@ NEXTSTEP 3.3 port
 
 The `nextstep33` branch adds a native NEXTSTEP AppKit frontend and Linux-hosted
 build tools for NeXT 68k, Intel, HPPA and SPARC. The existing OPENSTEP frontend
-remains available. Build instructions, required dependencies and validation
-scope are in [the NEXTSTEP port guide](docs/nextstep-port.md).
+remains available. This is a development port, not a packaged release.
+Build instructions, required dependencies and validation scope are in [the NEXTSTEP port guide](docs/nextstep-port.md).
 
 Browser-engine modernization is separate from this platform port. Keep both
 lines of work in this fork, on separate branches, so platform fixes can be
