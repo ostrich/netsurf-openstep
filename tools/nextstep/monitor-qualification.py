@@ -58,7 +58,8 @@ def capture(arch):
             for name, pattern in [('local-page', r'Native\s+browser\s+check'),
                                   ('http-page', r'Network\s+browser\s+check'),
                                   ('https-page', r'Secure\s+browser\s+check')]:
-                if name not in saved and re.search(pattern, text, re.I):
+                if (name not in saved and re.search(pattern, text, re.I)
+                        and re.search(r'Java\s*Script\s+works|Scrollable\s+document|HTML\s+and\s+CSS\s+rendering', text, re.I)):
                     shutil.copyfile(path, directory / (name + '.png'))
                     (directory / (name + '.txt')).write_text(text)
                     saved.add(name)
@@ -78,16 +79,17 @@ def capture(arch):
             frames = directory / 'video-frames'
             frames.mkdir(exist_ok=True)
             extraction = subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i',
-                str(directory / 'gui-video.mkv'), '-vf', 'select=gt(scene\\,0.0005)',
-                '-vsync', 'vfr', '-frames:v', '180', str(frames / '%04d.png')],
+                str(directory / 'gui-video.mkv'), '-vf', 'fps=1/2',
+                '-frames:v', '450', str(frames / '%04d.png')],
                 capture_output=True, timeout=60)
             scan_end = time.monotonic() + 60
-            for frame in sorted(frames.glob('*.png')):
+            for frame in sorted(frames.glob('*.png'), reverse=True):
                 if time.monotonic() >= scan_end:
                     break
                 text = subprocess.check_output(['tesseract', str(frame), 'stdout', '--psm', '11'],
                     text=True, stderr=subprocess.DEVNULL, timeout=8)
-                if re.search(r'Native\s+browser\s+check', text, re.I):
+                if (re.search(r'Native\s+browser\s+check', text, re.I)
+                        and re.search(r'Java\s*Script\s+works|Scrollable\s+document|HTML\s+and\s+CSS\s+rendering', text, re.I)):
                     shutil.copyfile(frame, directory / 'local-page.png')
                     (directory / 'local-page.txt').write_text(text)
                     saved.add('local-page')

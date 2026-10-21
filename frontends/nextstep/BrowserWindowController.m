@@ -106,6 +106,7 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 - (Window *)nativeWindow { return window; }
 #ifdef NETSURF_NEXTSTEP_QUALIFY
 - (id)nativePlotView { return plotView; }
+- (BOOL)nativeIsLoading { return [(Button *)refreshButton tag] != 0; }
 #endif
 - (void)displayBrowserIfNeeded
 {

@@ -15,6 +15,7 @@ extern struct gui_clipboard_table nextstep_clipboard_table;
 @interface BrowserWindowController (Qualification)
 - (Window *)nativeWindow;
 - (id)nativePlotView;
+- (BOOL)nativeIsLoading;
 @end
 static BrowserWindowController *primary, *secondary;
 static FILE *results;
@@ -25,6 +26,7 @@ static DPSTimedEntry entry;
 static int failures;
 static BOOL ticking;
 static NSSize before_resize;
+static struct hlcache_handle *before_reload;
 
 static void check(const char *label, BOOL ok)
 {
@@ -36,7 +38,8 @@ static BOOL ready(BrowserWindowController *controller, const char *title)
 {
 	struct browser_window *browser = [controller browser];
 	struct hlcache_handle *content = browser ? browser_window_get_content(browser) : NULL;
-	return content != NULL && content_get_status(content) == CONTENT_STATUS_DONE &&
+	return content != NULL && ![controller nativeIsLoading] &&
+        content_get_status(content) == CONTENT_STATUS_DONE &&
 		strcmp(browser_window_get_title(browser), title) == 0;
 }
 static BOOL clipboard_contains(const char *expected)
@@ -170,10 +173,12 @@ static void tick(DPSTimedEntry timer, double now, void *context)
 		browser_window_key_press(browser, NS_KEY_SELECT_ALL);
 		browser_window_key_press(browser, NS_KEY_COPY_SELECTION);
 		check("verified-HTTPS-fetch", clipboard_contains("JavaScript works"));
+		before_reload = browser_window_get_content(browser);
 		[primary reload:nil]; stage++; changed = now;
 		break;
 	case 8:
-		if (now - changed < 1 || !ready(primary, "Secure browser check")) break;
+		if (browser_window_get_content(browser) == before_reload ||
+                !ready(primary, "Secure browser check")) break;
 		check("reload-completes", YES);
 		[primary close:nil]; primary = nil;
 		check("last-window-close", [nextstep_browser_windows count] == 0);

@@ -94,3 +94,16 @@ native draw/resize logs; a covered title is not a reliable identification anchor
 The source deliberately avoids Foundation, scroll views and browser code.
 Readiness is the explicit draw/resize/completion sequence, not a fixed boot delay.
 Normal recovery is the per-process watchdog followed by the runner's native halt.
+
+
+## 68k browser qualification after the compiler fix
+
+Verified 2026-10-21 with the optimized m68k compiler candidate. The same owned
+Previous desktop route passes the 16 GUI, 11 HTTP/TLS and 16 certificate checks.
+Capture fixture body text as well as the title: a page title can be present
+while the document view is still empty. On dithered displays, `Scrollable
+document` or `HTML and CSS rendering` can be more reliable OCR anchors than
+the JavaScript line. When live OCR misses a short transition, sample the whole
+recorded video and scan the samples from the end, rather than stopping after
+an initial set of boot-time scene changes. Pixel review is separate from the
+DOM/pasteboard and geometry assertions.

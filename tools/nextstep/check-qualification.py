@@ -6,6 +6,14 @@ from pathlib import Path
 import re
 
 
+def rendered_local_text(text):
+    # A title bar alone is not pixel evidence. Dithered displays can defeat
+    # OCR of the JavaScript line, so accept another fixture body label too.
+    return (re.search(r'Native\s+browser\s+check', text, re.I) is not None and
+        re.search(r'Java\s*Script\s+works|Scrollable\s+document|HTML\s+and\s+CSS\s+rendering',
+                  text, re.I) is not None)
+
+
 def validate(record, text, screenshot):
     problems = []
     if not record.get('native_halt'):
@@ -49,7 +57,11 @@ def main():
         try:
             record = json.loads((directory / 'collection.json').read_text())
             text = (directory / 'results.txt').read_text(errors='replace')
-            problems = validate(record, text, ((directory / 'local-page.png').is_file() or (directory / 'native-page.png').is_file()))
+            picture = directory / 'local-page.png'
+            ocr = directory / 'local-page.txt'
+            rendered = (picture.is_file() and ocr.is_file() and
+                rendered_local_text(ocr.read_text()))
+            problems = validate(record, text, rendered)
             if arch != 'm68k':
                 if len(re.findall(r'^REQUEST TLSv1\.3 /secure\r?$', text, re.M)) < 2:
                     problems.append('verified HTTPS fetch/reload requests were not observed')

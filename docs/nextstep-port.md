@@ -189,3 +189,10 @@ IP SAN verification for IP URLs instead of treating them as DNS names.
 Native initial window dimensions now fit smaller screens, including the
 Intel fixture's 640x480 VGA desktop. Larger desktops retain the existing
 720x480 content size.
+
+
+The 68k drawing/resize failure was traced to GCC 16.2's m68k floating-point
+caller-save handling. A compiler-level fix, retaining normal optimization,
+passes the controlled GUI and HTTP/TLS batch. The external canonical toolchain
+still needs its coherent update and promotion; this fork carries no browser
+source workaround for that compiler defect.

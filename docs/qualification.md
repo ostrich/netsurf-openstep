@@ -10,7 +10,7 @@ websites, complete TLS conformance or readiness for release packaging.
 | Target | Ordinary startup | Certificate identity | HTTP/TLS | Native GUI |
 | --- | --- | --- | --- | --- |
 | Intel | 13 passed | 16 passed | 11 passed | Blocked by desktop fixture |
-| NeXT 68k | 13 passed | 16 passed | 11 passed | Incomplete: display/resize stall |
+| NeXT 68k | 13 passed | 16 passed | 11 passed | 16 passed with compiler fix, rendered capture |
 | HPPA | 13 passed | 16 passed | 11 passed | 16 passed, rendered capture |
 | SPARC | 13 passed | 16 passed | 11 passed | 16 passed, rendered capture |
 
@@ -27,19 +27,33 @@ result is a setup failure, not evidence that the browser itself failed to launch
 its Intel route is not qualified. A proper installed Intel fixture is the next
 step rather than further browser changes based on that environment.
 
-On 68k, document loading, JavaScript/pasteboard assertions and form callbacks
-succeeded, but the displayed window remained blank and the resize operation
-stalled until the watchdog. The ordinary startup and real external HTTP/TLS
-checks passed. This remains an application/AppKit/compiler/emulator boundary
-to isolate; it is not attributed to Previous without further evidence.
-A subsequent minimal AppKit control passed with both the guest's GCC 2.5.8
-and the Linux-hosted GCC 16.2 compiler in the same 68k session: initial drawing,
-explicit redisplay, window resize and drawing at the new dimensions all worked.
-Both binaries logged three draw calls and the same final 442x332 window frame;
-host video also shows the colored rectangle. This rules out a general failure
-of basic native AppKit drawing/resizing in this guest. It does not qualify the
-browser's Foundation, ScrollView, framebuffer or timer interactions. The GUI
-batch correctly reports failure and performs native shutdown afterward.
+The 68k blank window and resize stall came from GCC 16.2 code generation,
+not a general VM or AppKit failure. The compiler saved live floating-point
+window dimensions in extended format, then copied a low word of that save slot
+as a single-precision value. The initial window was 720x480, but subsequent
+view rectangles became zero-sized. A two-file C reduction reproduced the
+problem without any browser, AppKit or Foundation code.
+
+Native GCC 2.5.8 passed the reduction; the old cross-compiler failed three of
+four rectangle checks. Both disabling caller saves and fixing the m68k
+floating-register mode-change hook restored correct results. The final browser
+uses the actual compiler fix with normal `-O2`, caller saves enabled and no
+temporary tracing. All 16 GUI, 11 network and 16 certificate checks passed,
+with actual page captures, two server-observed HTTPS requests for fetch/reload,
+normal application exit, native halt and a clean stopped filesystem.
+
+The fix belongs in the external compiler toolchain. No application-source
+workaround is needed. The candidate compiler is qualified for this regression
+and browser batch; the canonical installed compiler has not been promoted.
+A coherent compiler/runtime update remains necessary before making it the
+default or distributing an updated toolchain. The startup column records the
+earlier ordinary-build startup runs; it is not a claim of an already rebuilt
+and released canonical snapshot.
+
+Minimal AppKit controls also passed with native and cross compilers, including
+an Application subclass, View instance-variable offsets and a ScrollView.
+These controls were useful in isolating the compiler bug, but did not themselves
+exercise live floating-point dimensions across the same opaque calls.
 
 The earlier isolated Intel OPENSTEP 4.2 desktop rendered the controlled page
 and quit successfully. That is distinct from NEXTSTEP Intel qualification and
@@ -53,6 +67,15 @@ a second window, navigation history, HTTP and verified HTTPS page loading,
 reload, closing the last window and opening another. There are 16 assertions.
 Input is delivered through native view callbacks. Physical keyboard and mouse
 routing, URL-field editing and general manual browsing need separate checks.
+Transient stale pixels around the toolbar were visible during scripted resizing
+and navigation; pixel-perfect repaint behavior is not established by these
+geometry and content assertions.
+The reload check requires a new content handle and an idle native loading
+indicator, so it cannot accept the old page while a reload is pending. Host
+screenshots require visible fixture body text, not just a matching title bar.
+Video recovery samples the whole run so boot activity cannot exhaust a scene
+limit before the browser appears.
+
 Host screenshots establish that the fixture actually reached the display;
 DOM assertions alone are not accepted as rendering evidence.
 

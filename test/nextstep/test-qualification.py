@@ -15,6 +15,14 @@ class Results(unittest.TestCase):
         self.record = {'native_halt': True, 'fsck': {'disk': 0}, 'result_read_exitcode': 0}
         self.text = '\n'.join(['GUI PASS case']*16 + ['NETWORK PASS case']*11 + ['IDENTITY PASS case']*16 +
             ['GUI-SUITE 0','NETWORK-SUITE 0 cases=11','IDENTITY-SUITE 0','GUI-EXIT 0','PORTS-BATCH-STATUS 0']) + '\n'
+    def test_title_is_not_rendering(self):
+        self.assertFalse(module.rendered_local_text('Native browser check'))
+    def test_rendered_body(self):
+        self.assertTrue(module.rendered_local_text('Native browser check\nJavaScript works'))
+    def test_dithered_body(self):
+        self.assertTrue(module.rendered_local_text('Native browser check\nayaScrintwarks\nScrollable document'))
+    def test_unrelated_body(self):
+        self.assertFalse(module.rendered_local_text('File Viewer\nScrollable document'))
     def test_complete(self):
         self.assertEqual(module.validate(self.record,self.text,True), [])
     def test_old_shell_false_success(self):
