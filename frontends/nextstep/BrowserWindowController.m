@@ -42,8 +42,16 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 }
 - (void)loadWindow
 {
-	NXRect rect = NSMakeRect(60, 60, 720, 480);
+	NXSize screen;
+	float width = 720, height = 480;
+	NXRect rect;
 	View *content, *toolbar;
+	[NXApp getScreenSize:&screen];
+	if (screen.width > 0 && screen.width < 844) width = screen.width - 124;
+	if (screen.height > 0 && screen.height < 560) height = screen.height - 80;
+	if (width < 320) width = 320;
+	if (height < 240) height = 240;
+	rect = NSMakeRect(60, 40, width, height);
 	if (window != nil) return;
 	window = [[Window alloc] initContent:&rect style:NX_RESIZEBARSTYLE
 		backing:NX_BUFFERED buttonMask:NX_CLOSEBUTTONMASK | NX_MINIATURIZEBUTTONMASK
@@ -53,7 +61,7 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	[window setDelegate:self];
 	[window addToEventMask:NX_MOUSEMOVEDMASK];
 	content = [window contentView];
-	rect = NSMakeRect(0, 440, 720, 40);
+	rect = NSMakeRect(0, height - 40, width, 40);
 	toolbar = [[View alloc] initFrame:&rect];
 	[toolbar setAutoresizeSubviews:YES];
 	[toolbar setAutosizing:NX_WIDTHSIZABLE | NX_MINYMARGINSIZABLE];
@@ -61,7 +69,7 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	backButton = button(toolbar, self, "Back", @selector(back:), 6, 50);
 	forwardButton = button(toolbar, self, "Forward", @selector(forward:), 60, 66);
 	refreshButton = button(toolbar, self, "Reload", @selector(stopOrRefresh:), 130, 62);
-	rect = NSMakeRect(198, 9, 516, 22);
+	rect = NSMakeRect(198, 9, width - 204, 22);
 	urlBar = [[TextField alloc] initFrame:&rect];
 	[urlBar setBezeled:YES];
 	[urlBar setEditable:YES];
@@ -70,7 +78,7 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	[urlBar setAction:@selector(enterUrl:)];
 	[urlBar setAutosizing:NX_WIDTHSIZABLE];
 	[toolbar addSubview:urlBar];
-	rect = NSMakeRect(0, 0, 720, 440);
+	rect = NSMakeRect(0, 0, width, height - 40);
 	scrollView = [[ScrollView alloc] initFrame:&rect];
 	[scrollView setAutosizing:NX_WIDTHSIZABLE | NX_HEIGHTSIZABLE];
 	[scrollView setVertScrollerRequired:YES];
@@ -96,6 +104,9 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 }
 - (struct browser_window *)browser { return browser; }
 - (Window *)nativeWindow { return window; }
+#ifdef NETSURF_NEXTSTEP_QUALIFY
+- (id)nativePlotView { return plotView; }
+#endif
 - (void)displayBrowserIfNeeded
 {
 	[plotView displayPendingContent];

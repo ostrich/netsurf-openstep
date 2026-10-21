@@ -23,6 +23,7 @@ def main():
     p.add_argument('--prefix', required=True, action='append', type=Path)
     p.add_argument('--arch', choices=['i386', 'm68k', 'hppa', 'sparc'], required=True)
     p.add_argument('--jobs', type=int, default=4)
+    p.add_argument('--qualification', action='store_true', help='Include the opt-in native GUI test driver')
     a = p.parse_args()
     tc, sdk = a.toolchain.resolve(strict=True), a.sdk.resolve(strict=True)
     prefixes = [x.resolve(strict=True) for x in a.prefix]
@@ -55,6 +56,8 @@ def main():
                'NEXTSTEP_DEP_LDFLAGS=' + ' '.join('-L' + str(x / 'lib') for x in prefixes),
                'NEXTSTEP_APPKIT=' + str(a.appkit.resolve(strict=True)),
                'NEXTSTEP_FOUNDATION=' + str(a.foundation.resolve(strict=True))]
+    if a.qualification:
+        command += ['NEXTSTEP_QUALIFY=YES']
     env = dict(os.environ, LC_ALL='C',
                PATH=str(a.host_tools.resolve(strict=True) / 'bin') + ':' + os.environ['PATH'],
                PKG_CONFIG_LIBDIR=':'.join(str(x / 'lib/pkgconfig') for x in prefixes))

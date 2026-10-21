@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-21",
+  "scope": "Controlled NEXTSTEP 3.3 GUI and HTTP/TLS qualification; not release certification",
+  "targets": {
+    "i386": {
+      "ordinary_binary_sha256": "d22d1308ee71e1acbd653655b83d418d64cde5c95388a1c73a3352effb55620e",
+      "ordinary_startup_checks": 13,
+      "ordinary_startup_passed": true,
+      "ordinary_native_halt": true,
+      "ordinary_fsck": {
+        "root.raw": 0,
+        "work.raw": 0
+      },
+      "certificate_identity_passes": 16,
+      "network_passes": 11,
+      "gui_passes": 0,
+      "gui_qualified": false,
+      "native_halt": true,
+      "fsck": {
+        "root.raw": 0,
+        "work.raw": 0
+      },
+      "results_sha256": "22c7243667f8bf0d491ba638e86badc9ac269dd6bf440ffa885ca91ec632d212"
+    },
+    "m68k": {
+      "ordinary_binary_sha256": "481bcf92bf615a881d667cff175ae826ffb3d6c0fc8af703dfeddf6a6fd2cd07",
+      "ordinary_startup_checks": 13,
+      "ordinary_startup_passed": true,
+      "ordinary_native_halt": true,
+      "ordinary_fsck": {
+        "disk.img": 0
+      },
+      "certificate_identity_passes": 16,
+      "network_passes": 11,
+      "gui_passes": 3,
+      "gui_qualified": false,
+      "native_halt": true,
+      "fsck": {
+        "disk.img": 0
+      },
+      "results_sha256": "4df58487a36bf07cce309be061f9f14eafe5eacf748555a71e9613aa68c1c72f"
+    },
+    "hppa": {
+      "ordinary_binary_sha256": "ae1d4c4ff6f68d8c20714493c004fbae4feb5659dde3a3da536104a8cc0d1697",
+      "ordinary_startup_checks": 13,
+      "ordinary_startup_passed": true,
+      "ordinary_native_halt": true,
+      "ordinary_fsck": {
+        "disk.raw": 0
+      },
+      "certificate_identity_passes": 16,
+      "network_passes": 11,
+      "gui_passes": 16,
+      "gui_qualified": true,
+      "native_halt": true,
+      "fsck": {
+        "disk.raw": 0
+      },
+      "results_sha256": "9c4c988a6daa26ccc5f5da25d620b7b615116614894e84b154271c9c5f9597fe",
+      "render_capture_sha256": "8a66a93872f47c9f5bdb831e639a5cc984208aa780611f237493a72e742ed4f9"
+    },
+    "sparc": {
+      "ordinary_binary_sha256": "042372de0c82bb44955ed15d620258f74ae911f2ea9e77189a9deef2eaa4009a",
+      "ordinary_startup_checks": 13,
+      "ordinary_startup_passed": true,
+      "ordinary_native_halt": true,
+      "ordinary_fsck": {
+        "disk.raw": 0
+      },
+      "certificate_identity_passes": 16,
+      "network_passes": 11,
+      "gui_passes": 16,
+      "gui_qualified": true,
+      "native_halt": true,
+      "fsck": {
+        "disk.raw": 0
+      },
+      "results_sha256": "2a3a0327276ff6ffa5324289699e75c5361c4aae3af2623d32f0337b08349012",
+      "render_capture_sha256": "f3ebf853c57ca1919b21a58e724a65e5532a7348175b8a5b103c7ec89bd67892"
+    }
+  }
+}

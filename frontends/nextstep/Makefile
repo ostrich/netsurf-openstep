@@ -26,6 +26,9 @@ LDFLAGS += $(shell $(PKG_CONFIG) --libs libnsfb freetype2)
 LDFLAGS += $(NEXTSTEP_APPKIT) $(NEXTSTEP_FOUNDATION)
 LDFLAGS += -Wl,-sectcreate,__ICON,__header,frontends/openstep/res/NetSurf.iconheader
 LDFLAGS += -Wl,-segprot,__ICON,r,r -Wl,-sectcreate,__ICON,app,frontends/openstep/res/NetSurf.tiff
+ifeq ($(NEXTSTEP_QUALIFY),YES)
+CFLAGS += -DNETSURF_NEXTSTEP_QUALIFY
+endif
 OBJCFLAGS := $(CFLAGS) -fconstant-string-class=NXConstantString
 OBJC_WARNFLAGS :=
 S_FRONTEND := main.m BrowserWindowController.m PlotView.m schedule.m clipboard.m smoke.m text.m \
@@ -35,3 +38,8 @@ S_FRONTEND := main.m BrowserWindowController.m PlotView.m schedule.m clipboard.m
 SOURCES = $(S_COMMON) $(S_IMAGE) $(S_BROWSER) $(S_FRONTEND)
 content/fetchers/about/about.c: testament
 EXETARGET := NetSurf
+
+# Explicit integration-test build; ordinary binaries contain no test driver.
+ifeq ($(NEXTSTEP_QUALIFY),YES)
+SOURCES += frontends/nextstep/qualification.m
+endif

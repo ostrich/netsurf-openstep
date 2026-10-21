@@ -24,6 +24,9 @@ static NSString *initial_url;
 static BOOL startup_trace;
 #define TRACE(message) do { if (startup_trace) { fprintf(stderr, "NetSurf: %s\n", message); fflush(stderr); } } while (0)
 extern int nextstep_smoke_test(void);
+#ifdef NETSURF_NEXTSTEP_QUALIFY
+extern void nextstep_qualification_start(const char *directory);
+#endif
 
 static nserror defaults(struct nsoption_s *options)
 {
@@ -220,6 +223,14 @@ int main(int argc, char **argv)
 	[menu sizeToFit];
 	[app setMainMenu:menu];
 	[delegate appDidInit:app];
+#ifdef NETSURF_NEXTSTEP_QUALIFY
+	{
+		int i;
+		for (i = 1; i + 1 < argc; i++)
+			if (strcmp(argv[i], "--qualification") == 0)
+				nextstep_qualification_start(argv[i + 1]);
+	}
+#endif
 	[app activateSelf:YES];
 	TRACE("entering event loop");
 	[app run];

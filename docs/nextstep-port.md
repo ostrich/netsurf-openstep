@@ -176,3 +176,16 @@ The native bitmap upload uses opaque packed RGB. The original OPENSTEP renderer
 retains RGBA. Both reject excessive framebuffer dimensions before signed size
 arithmetic can overflow; very large documents still need a viewport-sized
 rendering strategy rather than allocating up to their visible document offset.
+
+
+## GUI and HTTP/TLS qualification
+
+The opt-in native GUI driver, network probes and strict result checker are
+separate from ordinary application builds. See [qualification](qualification.md)
+for coverage, reproduction and limits. HTTP/TLS checks include valid TLS 1.2
+and 1.3 connections and certificate rejection cases. A shared fetcher fix uses
+IP SAN verification for IP URLs instead of treating them as DNS names.
+
+Native initial window dimensions now fit smaller screens, including the
+Intel fixture's 640x480 VGA desktop. Larger desktops retain the existing
+720x480 content size.

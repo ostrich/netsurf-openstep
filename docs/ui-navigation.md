@@ -40,5 +40,40 @@ HTML/CSS/JavaScript fixture. Wait for both the `Native browser check` heading an
 The 2026-10-21 run showed the styled heading, green CSS block, changed paragraph
 and link. Send Alt-Q while the browser is the active application and confirm its
 process exits. The enclosing runner then performs native halt and filesystem
-checks. This batch passed on the disposable OPENSTEP desktop; NEXTSTEP 3.3 GUI
-sessions and other browser interactions are not yet qualified.
+checks. This batch passed on the disposable OPENSTEP desktop. The separate
+NEXTSTEP qualification route below covers additional browser interactions.
+
+
+## NEXTSTEP 3.3 automated desktop batch
+
+Verified 2026-10-21 on disposable HPPA and SPARC installed-system copies.
+`prepare-qualification.py` stages the local fixture, helpers and bounded test
+script. Starting state is a stopped owned clone, with matching shared runtimes.
+The runner starts native multiuser services and the script waits for Workspace.
+Use bounded `ps -ax` and accept both `Workspace` and `(Workspace)`; the latter
+is how a swapped native process appears. Avoid username-resolution-dependent
+`ps` output while NetInfo is starting. Acquire the PID afresh.
+
+The root-only helper's `@root` mode is intended for an already real-root test
+script and avoids a redundant NetInfo account lookup. The script then launches
+NetSurf with its actual resources and qualification-only argument. Expected
+window: `Native browser check`, followed by `Second page`, HTTP and HTTPS
+fixtures. The test driver exercises view callbacks and browser actions; it is
+not a recipe for injecting hardware input.
+
+Use the host monitor for screenshots, and retain a short sequence if OCR misses
+a transition. A window title alone is insufficient: the document heading,
+styled block and JavaScript-modified paragraph must be visible. Reaching the
+desktop does not establish that any assertion passed. The strict result checker
+validates those assertions independently.
+
+Intel CD-root copies require additional setup before normal desktop startup:
+installed-device aliases, IDE mounts, display/mouse drivers, installer-completion
+markers, and a fresh desktop bootstrap namespace. `prepare-desktop.py` changes
+only the stopped copy and records hashes and a filesystem check. These settings
+are test equipment, not an installation procedure for a user's machine.
+
+Recovery: let the watchdog terminate a failed application, then perform native
+halt and collect logs only after the emulator closes its disks. A failed boot
+that cannot reach native halt must be labelled unqualified; preserve its logs
+and never inspect an image while the emulator owns it.
