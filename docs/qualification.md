@@ -60,6 +60,16 @@ The earlier isolated Intel OPENSTEP 4.2 desktop rendered the controlled page
 and quit successfully. That is distinct from NEXTSTEP Intel qualification and
 predates this shared TLS change. No release-readiness claim follows from it.
 
+The OPENSTEP 4.2 Workspace launch check now uses `/usr/bin/open` in the
+owned desktop namespace, rather than directly executing the app. It caught a
+startup crash that direct execution and `--smoke-test` missed: native AppKit
+removes `-MachLaunch` arguments from `argv` in place, leaving main's original
+`argc` stale. The logger dereferenced a cleared argument. The frontend now
+recounts the shortened argument vector after Application initialization.
+The corrected ordinary Intel executable launched through Workspace with real
+`-MachLaunch` arguments and rendered the welcome page in the disposable guest.
+This is separate from NEXTSTEP 3.3 Intel desktop qualification.
+
 ## Coverage
 
 The native GUI batch checks JavaScript-modified document text through the

@@ -152,3 +152,11 @@ window frame. Release, then capture the new viewport without further input.
 The middle-bar route was verified; the attempted corner route did not resize
 this window. Quit the owned browser normally, then request and confirm native
 halt before stopping QEMU or checking its image.
+
+To qualify an installable OPENSTEP application, run `/usr/bin/open PATH.app`
+through the desktop helper and let Workspace execute the bundle. Directly
+executing `PATH.app/EXECUTABLE` only checks the desktop namespace. Confirm a
+live browser process with Workspace's `-MachLaunch` arguments and actual page
+body pixels. Verified 2026-10-21: both the disposable desktop and the running
+installed desktop use this route. Native AppKit consumes launch arguments in
+place; code using main's saved argc must account for the shorter argv afterward.

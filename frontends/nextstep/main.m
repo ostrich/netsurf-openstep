@@ -168,6 +168,11 @@ int main(int argc, char **argv)
 		TRACE("creating Application");
 		app = [NextstepApplication new];
 		if (app == nil) return failed("Application initialization", 1);
+		/* Native AppKit consumes Workspace/defaults arguments in-place. Its
+		 * shortened argv is NULL-terminated, but main's argc is a value copy.
+		 * Recount before the logger or URL parser examines those arguments. */
+		argc = 0;
+		while (argv[argc] != NULL) argc++;
 		TRACE("Application created");
 	}
 	TRACE("initializing browser core");

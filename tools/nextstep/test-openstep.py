@@ -98,9 +98,9 @@ document.title = 'NetSurf JS OK';</script>
     local = output / 'fixture.html'
     local.write_text(fixture)
     agent.upload(local, directory + '/fixture.html', mode=0o644)
-    # GUI commands must originate inside the desktop's WindowServer context.
-    # Even open(1) from the agent cannot supply it. The test-only helper copies
-    # Workspace's namespace, drops privileges, then execs the browser.
+    # Supply the desktop namespace to open(1), then let Workspace launch the
+    # app with its real -MachLaunch arguments. Direct exec bypasses this
+    # launch protocol and cannot qualify a double-clickable installation.
     agent.execute('/bin/chmod', ['755', directory], execution_timeout=10)
     agent.upload(local, directory + '/NetSurf.app/welcome.html', mode=0o644)
     sys.path.insert(0, str(project / 'installer'))
@@ -108,7 +108,7 @@ document.title = 'NetSurf JS OK';</script>
     qmp = QMP(output / 'work/qmp.sock')
     agent.upload(helper, directory + '/desktop-exec', mode=0o755)
     command = (directory + '/desktop-exec ' + desktop_pid + ' ' + owner + ' ' +
-               directory + '/NetSurf.app/NetSurf -v > ' + directory +
+               '/usr/bin/open ' + directory + '/NetSurf.app > ' + directory +
                '/gui-launch.txt 2>&1 < /dev/null &')
     agent.execute('/bin/sh', ['-c', command], execution_timeout=10)
     passed = False
