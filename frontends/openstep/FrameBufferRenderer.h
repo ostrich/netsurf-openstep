@@ -28,4 +28,8 @@ BOOL openstep_framebuffer_render_browser(struct browser_window *browser,
 		BOOL showCaret,
 		NSRect caretRect);
 
+#ifdef NETSURF_NEXTSTEP_QUALIFY
+NSSize nextstep_framebuffer_test_size(void);
+#endif
+
 #endif

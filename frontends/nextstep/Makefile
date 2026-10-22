@@ -41,5 +41,5 @@ EXETARGET := NetSurf
 
 # Explicit integration-test build; ordinary binaries contain no test driver.
 ifeq ($(NEXTSTEP_QUALIFY),YES)
-SOURCES += frontends/nextstep/qualification.m
+SOURCES += frontends/nextstep/qualification.m frontends/nextstep/everyday.m
 endif

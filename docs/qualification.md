@@ -148,6 +148,28 @@ is useful regression evidence, but does not replace rebuilding the original
 GCC 4.2 OPENSTEP lane after shared fetcher changes.
 
 
+## Clean rebuild and everyday controls, 2026-10-21
+
+Fresh optimized browser builds on the promoted compiler passed all 13 startup
+checks on each of the four targets. Project dependencies were rebuilt from the
+pinned sources; qualified external runtime inputs were reused explicitly.
+Ordinary binaries contain no acceptance driver.
+
+The m68k native-control batch passed all 22 checks. The restored toolbar/header
+matched a forced full repaint exactly: zero differing pixels out of 54,480.
+The deep-scroll page rendered correctly with a 701x421 framebuffer at document
+offset 19,000. Stable checkpoint images at both window sizes were also reviewed. A separate ordinary
+build passed actual host-keyboard location entry, Return navigation and history
+back, then quit normally. All guests halted natively and passed stopped
+filesystem checks.
+
+Selection uses direct view callbacks; form and link clicks use native Window
+hit testing. Physical mouse drag delivery remains unqualified. The earlier
+HTTP/TLS results above were not repeated for these rendering and input changes.
+Intel desktop qualification and the original GCC 4.2 OPENSTEP build remain
+separate work. Input hashes, result scope and exact checks are recorded in
+[the build validation record](everyday-controls-2026-10-21.json).
+
 ## Minimal 68k AppKit control
 
 `test/nextstep/appkit-probe.m` uses only native AppKit and system libraries.
@@ -168,3 +190,46 @@ native halt and the collected filesystem check.
 The 2026-10-21 control batch passed, exited through native halt and had a clean
 stopped filesystem. The result checks require successful drawing and resize markers in addition
 to application exit status.
+
+## Everyday controls and repaint regression
+
+`--everyday DIRECTORY` is available only in qualification builds.
+`prepare-everyday.py` stages offline pages and an application into a fresh private
+payload, reusing explicit matching runtime and entropy support. Prepare a fresh
+68k clone, apply `prepare-desktop.py`, then run the guest runner and
+`monitor-everyday.py` concurrently. Run `check-everyday.py` on the collected suite.
+All these tools accept `--help`. No fixture seeds or guest images belong in a
+distribution archive.
+
+The batch checks location editing and Return, HTML form editing and traversal,
+clipboard actions, history, scrolling, viewport-sized buffers, resize, reload,
+selection and window closure. Key events use the native DPS queue; mouse
+clicks use native Window hit testing. The selection test invokes the custom
+view's mouse callbacks directly: synthetic WindowServer drag tracking after a
+native control click is unreliable. This does not qualify the emulator's
+physical mouse device or native drag delivery. The host monitor separately
+uses the owned Previous SDL window to check host keyboard input. Readiness uses
+observable content and clipboard changes, rather than assuming a fixed delay
+means editing has completed.
+
+Four screen checkpoints cover deep scrolling, shrink, restore and a forced full
+repaint. The monitor saves each phase once after two identical pixel frames;
+it must not overwrite a checkpoint while the next resize starts. The checker compares the restored toolbar/header against the forced
+reference, anchored to the current native title bar. A known broken white-strip
+image is a negative control; screenshot existence alone is insufficient. Review
+the full images separately for page and deep-scroll correctness. The pixel
+comparison is qualified for the unscaled Previous desktop and native font.
+
+For an independent ordinary build, `prepare-smoke.py` accepts paired
+`--gui-helpers` and `--gui-fixture` directories. It adds a bounded m68k desktop
+launch to the four-target startup batch. `monitor-ordinary.py` enters a local
+URL through actual host keys, checks destination and history-page rendering,
+then quits. Require its host result together with native process exit, halt and
+stopped-filesystem checks. Ordinary binaries contain no acceptance driver.
+
+`python3 test/text-hit.py` compiles the actual nearest-text search
+routines with small geometry fixtures. It covers an interior hit, both ends of
+a short line, directional selection between lines, list markers, floating text and a
+document without text.
+The past-container case failed before the search fix. This test isolates
+geometry; it does not substitute for rendering, font loading or native input.

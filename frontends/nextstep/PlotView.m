@@ -64,7 +64,10 @@ static browser_mouse_state modifiers(NXEvent *event)
 	NXRect visible;
 	(void)rects;
 	(void)count;
-	[self getVisibleRect:&visible];
+	/* AppKit may draw this view before our coalesced pass. Retire the pending
+	 * request now, while preserving new invalidations raised during rendering. */
+	needs_redraw = NO;
+	if (![self getVisibleRect:&visible]) return self;
 	if (getenv("NETSURF_STARTUP_TRACE")) {
 		static unsigned count;
 		if (count++ < 8) fprintf(stderr, "NetSurf: draw browser=%p visible=%g,%g %gx%g\n",
@@ -148,10 +151,15 @@ static browser_mouse_state modifiers(NXEvent *event)
 		case 0xaf: key = NS_KEY_DOWN; break;
 		default: return [super keyDown:event];
 		}
+		if (event->flags & NX_ALTERNATEMASK) {
+			if (key == NS_KEY_LEFT) key = NS_KEY_WORD_LEFT;
+			else if (key == NS_KEY_RIGHT) key = NS_KEY_WORD_RIGHT;
+		}
 	} else {
 		switch (key) {
 		case '\r': key = NS_KEY_NL; break;
 		case '\t': key = (event->flags & NX_SHIFTMASK) ? NS_KEY_SHIFT_TAB : NS_KEY_TAB; break;
+		case 0x19: key = NS_KEY_SHIFT_TAB; break; /* Native NX_BTAB. */
 		case 0x7f: case '\b': key = NS_KEY_DELETE_LEFT; break;
 		case 0x1b: key = NS_KEY_ESCAPE; break;
 		default:
@@ -171,6 +179,10 @@ static browser_mouse_state modifiers(NXEvent *event)
 		else if (key == NS_KEY_DOWN) visible.origin.y += 20;
 		else if (key == NS_KEY_LEFT) visible.origin.x -= 20;
 		else if (key == NS_KEY_RIGHT) visible.origin.x += 20;
+		else if (key == ' ') visible.origin.y +=
+			(event->flags & NX_SHIFTMASK ? -1 : 1) *
+			(visible.size.height > 20 ? visible.size.height - 20 : 20);
+		else if (key == NS_KEY_ESCAPE) { browser_window_stop(browser); return self; }
 		else return [super keyDown:event];
 		[self scrollPoint:&visible.origin];
 	}

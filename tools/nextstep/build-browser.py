@@ -41,6 +41,9 @@ def main():
     out.mkdir(parents=True, exist_ok=False)
     tree = out / 'source'
     shutil.copytree(ROOT, tree, symlinks=True, ignore=shutil.ignore_patterns('.git', 'work', 'build', '__pycache__', 'NetSurf', 'NetSurf.app'))
+    source_hashes = {str(path.relative_to(tree)): hashlib.sha256(path.read_bytes()).hexdigest()
+                     for path in sorted(tree.rglob('*')) if path.is_file()}
+    revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     cc = out / 'cc'
     cc.write_text('#!/bin/sh\nexec ' + shlex.join([str(tc / 'bin/nextstep-gcc'),
                   '--sdk', str(sdk), '-arch', a.arch, '--compat-headers',
@@ -62,6 +65,7 @@ def main():
                PATH=str(a.host_tools.resolve(strict=True) / 'bin') + ':' + os.environ['PATH'],
                PKG_CONFIG_LIBDIR=':'.join(str(x / 'lib/pkgconfig') for x in prefixes))
     record = {'toolchain_manifest_sha256': hashlib.sha256((tc / 'toolchain.json').read_bytes()).hexdigest(),
+              'source_revision': revision, 'source_files_sha256': source_hashes,
               'architecture': a.arch, 'command': command,
               'archive_sha256': input_hashes,
               'prefixes': [str(x) for x in prefixes], 'purpose': 'integration build'}

@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <limits.h>
+#include <math.h>
 
 #import <libnsfb.h>
 #import <libnsfb_plot.h>
@@ -44,6 +45,13 @@ static unsigned char *openstep_fb_upload;
 static int openstep_fb_upload_size;
 static int openstep_fb_width;
 static int openstep_fb_height;
+
+#ifdef NETSURF_NEXTSTEP_QUALIFY
+NSSize nextstep_framebuffer_test_size(void)
+{
+	return NSMakeSize(openstep_fb_width, openstep_fb_height);
+}
+#endif
 
 static BOOL openstep_framebuffer_ensure_surface(NSRect rect)
 {
@@ -191,8 +199,29 @@ BOOL openstep_framebuffer_render_browser(struct browser_window *browser,
 	unsigned char *buffer;
 	int stride;
 	const unsigned char *planes[5];
+#ifdef NETSURF_NEXTSTEP
+	int origin_x, origin_y;
+	NSRect surface_rect;
+	/* Render in viewport coordinates. Allocating up to the document offset
+	 * wastes memory, repacks hidden rows and makes deep scrolling expensive.
+	 * Round outwards so fractional ClipView bounds cannot leave an edge dirty. */
+	if (!(rect.origin.x >= 0 && rect.origin.y >= 0 &&
+		(double)NSMaxX(rect) <= INT_MAX && (double)NSMaxY(rect) <= INT_MAX &&
+		rect.size.width > 0 && rect.size.height > 0)) return NO;
+	origin_x = (int)floor(rect.origin.x);
+	origin_y = (int)floor(rect.origin.y);
+	surface_rect = NSMakeRect(0, 0,
+		ceil((double)NSMaxX(rect)) - origin_x,
+		ceil((double)NSMaxY(rect)) - origin_y);
+#endif
 
-	if (browser == NULL || !openstep_framebuffer_ensure_surface(rect)) {
+	if (browser == NULL || !openstep_framebuffer_ensure_surface(
+#ifdef NETSURF_NEXTSTEP
+			surface_rect
+#else
+			rect
+#endif
+			)) {
 		return NO;
 	}
 
@@ -200,10 +229,16 @@ BOOL openstep_framebuffer_render_browser(struct browser_window *browser,
 	ctx.background_images = true;
 	ctx.plot = &fb_plotters;
 
+#ifdef NETSURF_NEXTSTEP
+	clip.x0 = clip.y0 = 0;
+	clip.x1 = openstep_fb_width;
+	clip.y1 = openstep_fb_height;
+#else
 	clip.x0 = NSMinX(rect);
 	clip.y0 = NSMinY(rect);
 	clip.x1 = NSMaxX(rect);
 	clip.y1 = NSMaxY(rect);
+#endif
 
 	previous = framebuffer_set_surface(openstep_fb_surface);
 	fb_plotters.clip(&ctx, &clip);
@@ -211,12 +246,22 @@ BOOL openstep_framebuffer_render_browser(struct browser_window *browser,
 	clear_style.fill_type = PLOT_OP_TYPE_SOLID;
 	clear_style.fill_colour = 0x00ffffff;
 	fb_plotters.rectangle(&ctx, &clear_style, &clip);
-	browser_window_redraw(browser, 0, 0, &clip, &ctx);
+	browser_window_redraw(browser,
+#ifdef NETSURF_NEXTSTEP
+		-origin_x, -origin_y,
+#else
+		0, 0,
+#endif
+		&clip, &ctx);
 
 	if (showCaret) {
 		nsfb_bbox_t caret;
 		caret.x0 = caretRect.origin.x;
 		caret.y0 = caretRect.origin.y;
+#ifdef NETSURF_NEXTSTEP
+		caret.x0 -= origin_x;
+		caret.y0 -= origin_y;
+#endif
 		caret.x1 = caret.x0 + caretRect.size.width;
 		caret.y1 = caret.y0 + caretRect.size.height;
 		nsfb_plot_rectangle_fill(openstep_fb_surface,
@@ -244,7 +289,8 @@ BOOL openstep_framebuffer_render_browser(struct browser_window *browser,
 	planes[3] = NULL;
 	planes[4] = NULL;
 #ifdef NETSURF_NEXTSTEP
-	NXRect destination = NSMakeRect(0, 0, openstep_fb_width, openstep_fb_height);
+	NXRect destination = NSMakeRect(origin_x, origin_y,
+		openstep_fb_width, openstep_fb_height);
 	NXDrawBitmap(&destination,
 #else
 	NSDrawBitmap(NSMakeRect(0, 0, openstep_fb_width, openstep_fb_height),

@@ -32,6 +32,9 @@ struct form_control;
 #endif
 #ifdef NETSURF_NEXTSTEP
 	Window *window;
+	BOOL nativeNeedsFullDisplay;
+	NXSize nativeViewportSize;
+	id nativeActionTarget;
 #else
 	NSWindow *window;
 #endif

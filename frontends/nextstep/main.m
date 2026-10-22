@@ -26,6 +26,7 @@ static BOOL startup_trace;
 extern int nextstep_smoke_test(void);
 #ifdef NETSURF_NEXTSTEP_QUALIFY
 extern void nextstep_qualification_start(const char *directory);
+extern void nextstep_everyday_start(const char *directory);
 #endif
 
 static nserror defaults(struct nsoption_s *options)
@@ -53,6 +54,7 @@ static nserror defaults(struct nsoption_s *options)
 @interface BrowserWindowController (NativeWindow)
 - (Window *)nativeWindow;
 - (void)displayBrowserIfNeeded;
+- (void)focusLocation:(id)sender;
 @end
 
 @implementation NextstepApplication
@@ -106,6 +108,7 @@ static BrowserWindowController *front_browser(void)
 	return self;
 }
 - back:sender { [front_browser() back:sender]; return self; }
+- focusLocation:sender { [front_browser() focusLocation:sender]; return self; }
 - forward:sender { [front_browser() forward:sender]; return self; }
 - reload:sender { [front_browser() reload:sender]; return self; }
 - stopLoading:sender { [front_browser() stopLoading:sender]; return self; }
@@ -207,6 +210,7 @@ int main(int argc, char **argv)
 	menu = [[Menu alloc] initTitle:"NetSurf"];
 	add_item(menu, "New window", @selector(newWindow:), 'n', delegate);
 	add_item(menu, "Close", @selector(performClose:), 'w', nil);
+	add_item(menu, "Open location...", @selector(focusLocation:), 'l', delegate);
 	add_item(menu, "Cut", @selector(cut:), 'x', nil);
 	add_item(menu, "Copy", @selector(copy:), 'c', nil);
 	add_item(menu, "Paste", @selector(paste:), 'v', nil);
@@ -229,6 +233,8 @@ int main(int argc, char **argv)
 		for (i = 1; i + 1 < argc; i++)
 			if (strcmp(argv[i], "--qualification") == 0)
 				nextstep_qualification_start(argv[i + 1]);
+			else if (strcmp(argv[i], "--everyday") == 0)
+				nextstep_everyday_start(argv[i + 1]);
 	}
 #endif
 	[app activateSelf:YES];

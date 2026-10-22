@@ -2,16 +2,95 @@
 #import "../openstep/BrowserWindowController.h"
 #import "PlotView.h"
 #import "text.h"
+#import "schedule.h"
 #import <appkit/NXCursor.h>
 #import <appkit/ClipView.h>
+#import <dpsclient/psops.h>
 #include "netsurf/browser_window.h"
 #include "netsurf/keypress.h"
+#include "netsurf/misc.h"
 #include "desktop/browser_history.h"
 #include "utils/nsurl.h"
 #include "utils/log.h"
 
 static id pending_target;
 NSMutableArray *nextstep_browser_windows;
+
+@interface BrowserWindowController (LocationEditing)
+- (void)finishLocationEditing;
+- (void)browserViewDidResize;
+- (void)enterUrl:(id)sender;
+- windowWillClose:sender;
+- windowDidResize:sender;
+@end
+
+/* Old AppKit sends Object's target/action messages, including perform:with:.
+ * Keep that protocol on a native Object rather than relying on Foundation's
+ * distinct NSObject protocol. The controller owns this weak action adapter. */
+@interface NextstepWindowActions : Object {
+	BrowserWindowController *controller;
+}
+- initWithController:(BrowserWindowController *)value;
+@end
+@implementation NextstepWindowActions
+- initWithController:(BrowserWindowController *)value
+{
+	self = [super init];
+	controller = value;
+	return self;
+}
+- enterUrl:sender { [controller enterUrl:sender]; return self; }
+- back:sender { [controller back:sender]; return self; }
+- forward:sender { [controller forward:sender]; return self; }
+- stopOrRefresh:sender { [controller stopOrRefresh:sender]; return self; }
+- windowWillClose:sender { [controller windowWillClose:sender]; return self; }
+- windowDidResize:sender { [controller windowDidResize:sender]; return self; }
+@end
+static void finish_location_editing(void *context)
+{
+	[(BrowserWindowController *)context finishLocationEditing];
+}
+
+/* A plain View does not erase its background. The toolbar must repaint the
+ * strip uncovered when it moves during a buffered-window resize. */
+@interface NextstepToolbarView : View
+@end
+@implementation NextstepToolbarView
+- initFrame:(const NXRect *)rect
+{
+	self = [super initFrame:rect];
+	[self setOpaque:YES];
+	return self;
+}
+- drawSelf:(const NXRect *)rects :(int)count
+{
+	int i;
+	PSsetgray(NX_LTGRAY);
+	for (i = 0; i < count; i++) NXRectFill(&rects[i]);
+	return self;
+}
+@end
+
+/* sizeWindow:: resizes the view hierarchy without necessarily delivering the
+ * interactive window delegate notification. Observe the content view itself. */
+@interface NextstepContentView : NextstepToolbarView {
+	id browserController;
+}
+- setBrowserController:controller;
+@end
+@implementation NextstepContentView
+- setBrowserController:controller
+{
+	browserController = controller;
+	return self;
+}
+- resizeSubviews:(const NXSize *)oldSize
+{
+	[super resizeSubviews:oldSize];
+	[browserController browserViewDidResize];
+	return self;
+}
+@end
 
 static Button *button(View *parent, id target, const char *title, SEL action,
 		float x, float width)
@@ -47,34 +126,43 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	NXRect rect;
 	View *content, *toolbar;
 	[NXApp getScreenSize:&screen];
-	if (screen.width > 0 && screen.width < 844) width = screen.width - 124;
+	/* Leave the application menu and Workspace dock clear, including VGA. */
+	if (screen.width > 0 && screen.width < 940) width = screen.width - 220;
 	if (screen.height > 0 && screen.height < 560) height = screen.height - 80;
 	if (width < 320) width = 320;
 	if (height < 240) height = 240;
-	rect = NSMakeRect(60, 40, width, height);
+	rect = NSMakeRect(140, 40, width, height);
 	if (window != nil) return;
 	window = [[Window alloc] initContent:&rect style:NX_RESIZEBARSTYLE
 		backing:NX_BUFFERED buttonMask:NX_CLOSEBUTTONMASK | NX_MINIATURIZEBUTTONMASK
 		defer:NO];
 	[(Window *)window setTitle:"NetSurf"];
 	[window setFreeWhenClosed:NO];
-	[window setDelegate:self];
-	[window addToEventMask:NX_MOUSEMOVEDMASK];
-	content = [window contentView];
+	nativeActionTarget = [[NextstepWindowActions alloc] initWithController:self];
+	[window setDelegate:nativeActionTarget];
+	{
+		NXSize minimum = NSMakeSize(360, 240);
+		[window setMinSize:&minimum];
+	}
+	[window addToEventMask:NX_MOUSEMOVEDMASK | NX_LMOUSEDRAGGEDMASK | NX_LMOUSEUPMASK];
+	rect = NSMakeRect(0, 0, width, height);
+	content = [[NextstepContentView alloc] initFrame:&rect];
+	[window setContentView:content];
 	rect = NSMakeRect(0, height - 40, width, 40);
-	toolbar = [[View alloc] initFrame:&rect];
+	toolbar = [[NextstepToolbarView alloc] initFrame:&rect];
 	[toolbar setAutoresizeSubviews:YES];
 	[toolbar setAutosizing:NX_WIDTHSIZABLE | NX_MINYMARGINSIZABLE];
 	[content addSubview:toolbar];
-	backButton = button(toolbar, self, "Back", @selector(back:), 6, 50);
-	forwardButton = button(toolbar, self, "Forward", @selector(forward:), 60, 66);
-	refreshButton = button(toolbar, self, "Reload", @selector(stopOrRefresh:), 130, 62);
+	backButton = button(toolbar, nativeActionTarget, "Back", @selector(back:), 6, 50);
+	forwardButton = button(toolbar, nativeActionTarget, "Forward", @selector(forward:), 60, 66);
+	refreshButton = button(toolbar, nativeActionTarget, "Reload", @selector(stopOrRefresh:), 130, 62);
 	rect = NSMakeRect(198, 9, width - 204, 22);
 	urlBar = [[TextField alloc] initFrame:&rect];
 	[urlBar setBezeled:YES];
+	/* Native setSelectable:YES clears editability. setEditable:YES already
+	 * enables selection as well as typing and paste. */
 	[urlBar setEditable:YES];
-	[urlBar setSelectable:YES];
-	[urlBar setTarget:self];
+	[urlBar setTarget:nativeActionTarget];
 	[urlBar setAction:@selector(enterUrl:)];
 	[urlBar setAutosizing:NX_WIDTHSIZABLE];
 	[toolbar addSubview:urlBar];
@@ -92,6 +180,8 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	[plotView setBrowser:browser];
 	[scrollView setDocView:plotView];
 	[content setAutoresizeSubviews:YES];
+	nativeViewportSize = [self getBrowserSize];
+	[(NextstepContentView *)content setBrowserController:self];
 	[window makeFirstResponder:plotView];
 	[window display];
 	[window makeKeyAndOrderFront:self];
@@ -106,18 +196,30 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 - (Window *)nativeWindow { return window; }
 #ifdef NETSURF_NEXTSTEP_QUALIFY
 - (id)nativePlotView { return plotView; }
+- (id)nativeLocationField { return urlBar; }
+- (id)nativeReloadButton { return refreshButton; }
 - (BOOL)nativeIsLoading { return [(Button *)refreshButton tag] != 0; }
 #endif
 - (void)displayBrowserIfNeeded
 {
+	if (nativeNeedsFullDisplay) {
+		NSSize size = [self getBrowserSize];
+		nativeNeedsFullDisplay = NO;
+		if (browser) browser_window_reformat(browser, false, size.width, size.height);
+		[self updateBrowserExtent];
+		[window display];
+	} else {
+		[window displayIfNeeded];
+	}
 	[plotView displayPendingContent];
-	[window displayIfNeeded];
 	[window flushWindow];
 }
 - (void)dealloc
 {
+	nextstep_misc_table.schedule(-1, finish_location_editing, self);
 	[window setDelegate:nil];
 	[window free];
+	[nativeActionTarget free];
 	[super dealloc];
 }
 - windowWillClose:sender
@@ -132,6 +234,7 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 }
 - (void)netsurfWindowDestroy
 {
+	nextstep_misc_table.schedule(-1, finish_location_editing, self);
 	browser = NULL;
 	[plotView setBrowser:NULL];
 	if (!isClosing) { isClosing = YES; [window close]; }
@@ -148,15 +251,29 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 }
 - windowDidResize:sender
 {
-	NSSize size = [self getBrowserSize];
 	(void)sender;
-	if (browser) browser_window_reformat(browser, false, size.width, size.height);
-	[self updateBrowserExtent];
+	[self browserViewDidResize];
 	return self;
+}
+- (void)browserViewDidResize
+{
+	NSSize size;
+	if (scrollView == nil || plotView == nil) return;
+	size = [self getBrowserSize];
+	/* Native layout can revisit the hierarchy without changing its size.
+	 * Reformat only when the actual browser viewport changed. */
+	if (size.width == nativeViewportSize.width && size.height == nativeViewportSize.height)
+		return;
+	nativeViewportSize = size;
+	/* Repositioning transparent controls invalidates their old background too.
+	 * Repaint the hierarchy before the coalesced document pass. */
+	[[window contentView] setNeedsDisplay:YES];
+	nativeNeedsFullDisplay = YES;
+	[self invalidateBrowser];
 }
 - (NSSize)getBrowserSize
 {
-	NSSize size;
+	NSSize size = {0, 0};
 	[scrollView getContentSize:&size];
 	return size;
 }
@@ -166,7 +283,11 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	[scrollView getDocVisibleRect:&rect];
 	return rect.origin;
 }
-- (void)setBrowserScroll:(NSPoint)point { [plotView scrollPoint:&point]; }
+- (void)setBrowserScroll:(NSPoint)point
+{
+	[plotView scrollPoint:&point];
+	[self invalidateBrowser];
+}
 - (void)invalidateBrowser { [plotView setNeedsDisplay:YES]; }
 - (void)invalidateBrowser:(NSRect)rect
 {
@@ -195,7 +316,8 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 - (void)newContent { [self removeCaret]; [NXArrow set]; }
 - (void)setNavigationUrl:(NSString *)url
 {
-	[urlBar setStringValue:[url cString]];
+	/* A redirect or background load must not replace an address being typed. */
+	if ([urlBar currentEditor] == nil) [urlBar setStringValue:[url cString]];
 	[backButton setEnabled:browser && browser_window_back_available(browser)];
 	[forwardButton setEnabled:browser && browser_window_forward_available(browser)];
 }
@@ -217,7 +339,27 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	struct nsurl *url = browser ? browser_window_access_url(browser) : NULL;
 	return url ? [NSString stringWithCString:nsurl_access(url)] : @"about:blank";
 }
-- (void)enterUrl:(id)sender { [self openUrlString:[NSString stringWithCString:[sender stringValue]]]; }
+- (void)focusLocation:(id)sender
+{
+	(void)sender;
+	[window makeKeyAndOrderFront:self];
+	[urlBar selectText:self];
+}
+- (void)enterUrl:(id)sender
+{
+	NSString *address;
+	[sender validateEditing];
+	address = [NSString stringWithCString:[sender stringValue]];
+	[self openUrlString:address];
+	/* TextField finishes its own responder changes after sending the action.
+	 * Hand focus back only after that native editing operation has unwound. */
+	if (nextstep_misc_table.schedule(0, finish_location_editing, self) != NSERROR_OK)
+		[window makeFirstResponder:plotView];
+}
+- (void)finishLocationEditing
+{
+	if (!isClosing) [window makeFirstResponder:plotView];
+}
 - (void)openUrlString:(NSString *)text
 {
 	struct nsurl *url;

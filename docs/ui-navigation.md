@@ -107,3 +107,30 @@ the JavaScript line. When live OCR misses a short transition, sample the whole
 recorded video and scan the samples from the end, rather than stopping after
 an initial set of boot-time scene changes. Pixel review is separate from the
 DOM/pasteboard and geometry assertions.
+
+## Everyday 68k browser controls
+
+Verified 2026-10-21. Test setup: NEXTSTEP 3.3, owned Previous color desktop,
+unscaled 1120x832 client
+plus emulator status strip. Use `monitor-everyday.py` or `monitor-ordinary.py`
+with the suite's private display; reacquire its unique visible Previous SDL
+window and focus it before host input. Never use the user's running desktop.
+
+From a rendered browser page, Command-L selects the native location field.
+Type or paste a URL, then Return; wait for the destination document body, not
+just its title. Command-[ returns to the prior page. Command-Q exits the
+application. Completion additionally requires the guest's native halt and
+collected filesystem check. The monitor records failed transitions rather than
+blindly continuing.
+
+For an unexpected retained guest, use the external VM project's bounded
+`previous-poweroff.py` with the owned lab and display. It requests native power
+off and waits for the ROM monitor before closing Previous. Check image ownership
+before any offline filesystem inspection.
+
+Native field editing can enter a nested event loop. Do not synchronously call
+`selectText:` from a diagnostic timer and then expect the same callback to post
+the keys that end editing. Use normal command dispatch and observe readiness.
+Also, `setSelectable:YES` makes a native TextField read-only: use
+`setEditable:YES` for input. These are API lessons, separate from GUI test
+results.

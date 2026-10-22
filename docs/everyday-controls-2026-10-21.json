@@ -1,0 +1,154 @@
+{
+  "date": "2026-10-21",
+  "optimization": "-O2; caller saves enabled; no application workaround for compiler defects",
+  "toolchain_manifest_sha256": "5f965b7f3249ceb37ace506162754dd524269067d1ec58e89c9cdf53a2cc379f",
+  "clean_build": "Fresh four-target browser and project dependency builds; explicit qualified external runtime inputs reused",
+  "ordinary": {
+    "i386": {
+      "binary_sha256": "c7e60b52e54bffbdb7051ce16d40778d46208c7b842af616acad2e8957819ae8",
+      "startup_checks": 13,
+      "native_halt": true,
+      "fsck": {
+        "root.raw": 0,
+        "work.raw": 0
+      },
+      "qualification_driver_absent": true
+    },
+    "m68k": {
+      "binary_sha256": "0c2e2a4717de3507090ca92f4ceaefc44863d4fc59620d385eadef9579531394",
+      "startup_checks": 13,
+      "native_halt": true,
+      "fsck": {
+        "disk.img": 0
+      },
+      "qualification_driver_absent": true
+    },
+    "hppa": {
+      "binary_sha256": "e0429d0d8b181cf317cf174b4fa76e85261f9c41e49ad054836178c241ee4428",
+      "startup_checks": 13,
+      "native_halt": true,
+      "fsck": {
+        "disk.raw": 0
+      },
+      "qualification_driver_absent": true
+    },
+    "sparc": {
+      "binary_sha256": "044c0c631239dfea834acdda1ba329c9800238fabab2a721e31aab073e447b27",
+      "startup_checks": 13,
+      "native_halt": true,
+      "fsck": {
+        "disk.raw": 0
+      },
+      "qualification_driver_absent": true
+    }
+  },
+  "m68k_controls": {
+    "passed_checks": [
+      "command-L-location-editor",
+      "native-location-paste",
+      "return-focuses-document",
+      "queued-mouse-type-backspace-copy",
+      "native-paste-and-cut",
+      "form-tab-focus",
+      "form-shift-tab-focus",
+      "queued-link-click",
+      "command-history-back",
+      "command-history-forward",
+      "arrow-scroll",
+      "space-page-scroll",
+      "shift-space-page-scroll",
+      "deep-scroll",
+      "viewport-sized-framebuffer",
+      "resized-viewport",
+      "window-remains-responsive",
+      "native-reload-button",
+      "view-drag-selection-copy",
+      "host-keyboard-location-and-type",
+      "native-close-during-load",
+      "native-close-last-window"
+    ],
+    "native_halt": true,
+    "fsck": {
+      "disk.img": 0
+    },
+    "results_sha256": "3bd6ef6f042097648943f852005a4bfb8881f19662fd9009b04f03440f39f911",
+    "repaint_comparison": {
+      "changed_pixels": 0,
+      "compared_pixels": 54480,
+      "restored_bounds": [
+        159,
+        325,
+        840,
+        405
+      ],
+      "reference_bounds": [
+        159,
+        325,
+        840,
+        405
+      ]
+    },
+    "visual_review": "Stable deep, shrunk, restored and reference checkpoints reviewed",
+    "framebuffer": [
+      701,
+      421
+    ],
+    "document_scroll_y": 19000,
+    "selection_scope": "Custom view callbacks; native hit testing for form/link clicks; physical drag delivery unqualified",
+    "checkpoint_capture": "Each phase saved once after two identical pixel frames",
+    "screenshots_sha256": {
+      "paint-deep.png": "e8cdcfa22441ccff3c32301fbd74acb03904ae7933655c9ef2704a22febe2651",
+      "paint-shrunk.png": "4985867b1a731c81bab2abac68380954882844b701874c660000bf42dd3b3c42",
+      "paint-restored.png": "36e351f041995cc694e8f95b932e8fae63d56985adb96a40d27fcda77fa180bd",
+      "paint-reference.png": "85df7bc25a67c79f96ef98d7419a8592a0b5fa207d6087e38ad05922e4abbcaa"
+    }
+  },
+  "source_sha256": {
+    "content/handlers/html/box_inspect.c": "c4de470e064a9613e9a0897e531871e9a8b433ebf4d22b8c44b48fd6d44cb742",
+    "frontends/nextstep/BrowserWindowController.m": "c813275b1791e3ccd0a0e40355cfc7606dd423caaa1daac0912de151ad139c6e",
+    "frontends/nextstep/PlotView.h": "5bf445f9057f3910af664c050b7197bae0fe7825eff87c9db6d2b9bf17dcf311",
+    "frontends/nextstep/PlotView.m": "d805f322bd9e576c2df1e9fa55ef6e4a175a0b720d48ce6d1581d68091444dd0",
+    "frontends/nextstep/c-prefix.h": "ca0d97d4696fa6b0158ba9179ed36550d2ddbd38a6f9ced243a628ef601809d4",
+    "frontends/nextstep/clipboard.m": "e1b21913b8195d04de9003f58a571c887a764bd3e347ac9dffc4ac6bc6848522",
+    "frontends/nextstep/main.m": "8dd079f3159aa43999f81f3ad547b6722677d065c7364b8828bfdd568d162ffa",
+    "frontends/nextstep/platform.h": "74dd1ab693a3041445137fb24e2775839dc8da4b80bd25e75c78446495c2a358",
+    "frontends/nextstep/qualification.m": "e9852aff945a587dcd9d189fd0e8f34f897ae9a8d84ef2f9fe6e622831ca6881",
+    "frontends/nextstep/schedule.h": "728a45023aa056361ea03f87c6865ed5c3f10cec1c7f0d979f7d5fcef2e7a8a9",
+    "frontends/nextstep/schedule.m": "4794c98ff3e3c6e67666f2a32bdc7cbacdf445afc344532e60971b7dbcc8118a",
+    "frontends/nextstep/smoke.m": "0cc92fbe3512e5f18690d8265646eaf81f1d1fa4bbbc84dd8ffa46e4f346c1fd",
+    "frontends/nextstep/text.h": "1f7c526487ed16454b9aad30d7c2ce1e1c0607fae88bd822a277af5ff693fb51",
+    "frontends/nextstep/text.m": "62f8a09cfb3552253883d4ccb3bfd3f417384ed7cd66d7aa27503550ab94ae6b",
+    "frontends/openstep/AppDelegate.h": "b1c814a1dcd3189605ade808b10fa272810e68638b2d37161357aa6ea6a3aa94",
+    "frontends/openstep/AppDelegate.m": "755feba8ff45912bbba2d724d3ea835993dfc8d5b4a195ea6ec3c02f325dee5d",
+    "frontends/openstep/BrowserWindowController.h": "3ed17612eeb17376b9513e7750c73df77eafacf4fd15b2f80021f91414663113",
+    "frontends/openstep/BrowserWindowController.m": "e609ecb60c6d0c5547d2e752939f09f95dcab2092e2d51779b8b99496b2096c2",
+    "frontends/openstep/FrameBufferRenderer.h": "896b03bfa58aaf9e9db1aca935eaed54bb54c55a1bef7463b119ec8ea1ff8783",
+    "frontends/openstep/FrameBufferRenderer.m": "a575aa60261c2f12dec083138d145ef0e814c98859dd7731489edbbe2806f666",
+    "frontends/openstep/NetsurfCallback.h": "33a91735e7ce04e19077e17957caac8fcd587b232cac3c3b7ba64e54a77a2cf4",
+    "frontends/openstep/NetsurfCallback.m": "0404ee233a57d4954d795fc8527d4637dad9c17bca1002a187991a481330a336",
+    "frontends/openstep/Platform.h": "287c35a93856f6430638cc806a744ee9e6a006f6787ceba0beae404cd7b8305a",
+    "frontends/openstep/PlotView.h": "1027692522d2fff71a95b592a8353567373c43e92eb51f13d4a7456dee276e2c",
+    "frontends/openstep/PlotView.m": "0143a58cac68953a30195ba9dd690deb5b91393f3fcf9c679001740f5f0a55e3",
+    "frontends/openstep/tables/clipboard.m": "bccab9ca6411d5488d4808ce73c293e2d10607e57723dd6cb88de7f3cdfb852e",
+    "frontends/openstep/tables/fetch.m": "b4f7735c855ce912341cfd86597f3bfcbcdb4b840a3ee8f21b7d09312a5fe37a",
+    "frontends/openstep/tables/misc.h": "97f61f81d2ea84468f5ab6717d278cd9cd45b32dd13406431623e7a62c7416b6",
+    "frontends/openstep/tables/misc.m": "3e6c65da05c061097f59fd28b7b80f08fec8e8056287cbbd9bc08770cedd583a",
+    "frontends/openstep/tables/tables.h": "826555f1fc538f92c69169786c47fa21c7cf1a725bece65f504d82e46d70106f",
+    "frontends/openstep/tables/window.m": "24d7c87be82fb57d983e98764546d1db1f2da1d09242ef5897fb00a3f9812537"
+  },
+  "m68k_ordinary_host_keyboard": {
+    "passed": true,
+    "checks": [
+      "initial page rendered",
+      "host keyboard URL editing and Return rendered destination",
+      "keyboard history back rendered"
+    ],
+    "phase": 3,
+    "scope": "Ordinary m68k binary, actual host SDL keyboard and rendered page transitions"
+  },
+  "remaining": [
+    "Installed NEXTSTEP Intel desktop qualification",
+    "Physical mouse drag delivery",
+    "Original GCC 4.2 OPENSTEP frontend regression"
+  ]
+}

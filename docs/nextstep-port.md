@@ -76,11 +76,16 @@ and quits cleanly. The clone halts natively and passes its filesystem check.
 This checks the old-AppKit frontend on OPENSTEP; it does not substitute for GUI
 qualification on NEXTSTEP 3.3 itself.
 
-Remaining qualification includes NEXTSTEP GUI sessions, images, forms,
-clipboard, scrolling/resizing, navigation and multiple-window lifetimes,
-HTTP/TLS, and rebuilding the original OPENSTEP frontend with GCC 4.2. The icon
-also produces an old-AppKit TIFF alpha warning. No release is qualified yet.
-The original OPENSTEP frontend remains a separate build lane.
+Controlled NEXTSTEP GUI and HTTP/TLS batches passed on NeXT 68k, HPPA and
+SPARC. Intel networking passed through guest loopback; its copied CD-root
+desktop fixture remains unqualified. The additional everyday-control batch
+and ordinary-host-keyboard checks are described in
+[qualification](qualification.md), with their specific scope and results.
+
+Release work still includes a proper installed Intel desktop fixture and
+rebuilding the original OPENSTEP frontend with GCC 4.2. The icon produces an
+old-AppKit TIFF alpha warning. No release is qualified yet; the original
+OPENSTEP frontend remains a separate build lane.
 
 ## Reproducing integration builds
 
@@ -174,8 +179,9 @@ the native close delegate.
 
 The native bitmap upload uses opaque packed RGB. The original OPENSTEP renderer
 retains RGBA. Both reject excessive framebuffer dimensions before signed size
-arithmetic can overflow; very large documents still need a viewport-sized
-rendering strategy rather than allocating up to their visible document offset.
+arithmetic can overflow. NEXTSTEP renders only the visible viewport, translating
+the browser origin and caret before uploading the bitmap. Scrolling far down a
+document no longer allocates or repacks all the hidden rows above it.
 
 
 ## GUI and HTTP/TLS qualification
@@ -196,3 +202,30 @@ caller-save handling. A compiler-level fix, retaining normal optimization,
 passes the controlled GUI and HTTP/TLS batch. The external canonical toolchain
 now includes that fix in a qualified NIHS compiler/runtime snapshot. This fork
 carries no browser source workaround for that compiler defect.
+
+## Everyday window controls
+
+Command-L selects the location field; Return navigates and returns keyboard
+focus to the page. The location remains editable while a background load updates
+the browser. Native AppKit's `setSelectable:YES` clears editability, so the field
+uses `setEditable:YES` alone, which also enables selection. This differs from
+modern Cocoa assumptions; see the [NeXT TextField reference](https://www.bitsavers.org/pdf/next/Release_1_Dec90/NEXTstep_Reference_Volume_2_Dec90.pdf).
+
+Native `Object` adapters deliver toolbar actions and window notifications to
+the Foundation controller. The location field, Cut/Copy/Paste menu and page
+responder retain their separate native editing roles. HTML form fields receive
+Tab and backward Tab; outside editable content, arrows and Space/Shift-Space
+scroll, and Escape stops a load.
+
+The toolbar paints its own background. Content-view size changes coalesce a
+browser reformat and a full window repaint before the document upload. This
+covers programmatic resizing as well as the window delegate notification, and
+avoids stale or white strips around moved controls. Windows initially leave
+the application menu unobstructed and have a usable minimum size.
+
+Text-hit searching now considers the nearest line even when a selection drag
+jumps outside its inline container or between lines. Previously a single long
+movement beyond a short line could leave no selection. The shared search also
+returns defined relative coordinates when no text exists. A focused geometry
+regression exercises the actual search routines, alongside the guest drag/copy
+check.
