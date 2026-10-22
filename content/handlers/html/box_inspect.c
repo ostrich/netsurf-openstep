@@ -481,22 +481,11 @@ box_nearest_text_box(struct box *box,
 	struct box *child = box->children;
 	int c_bx, c_by;
 	int c_fx, c_fy;
-	bool in_box = false;
 
 	if (*nearest == NULL) {
 		*nr_xd = INT_MAX / 2; /* displacement of 'nearest so far' */
 		*nr_yd = INT_MAX / 2;
 	}
-	if (box->type == BOX_INLINE_CONTAINER) {
-		int bw = box->padding[LEFT] + box->width + box->padding[RIGHT];
-		int bh = box->padding[TOP] + box->height + box->padding[BOTTOM];
-		int b_y1 = by + bh;
-		int b_x1 = bx + bw;
-		if (x >= bx && b_x1 > x && y >= by && b_y1 > y) {
-			in_box = true;
-		}
-	}
-
 	while (child) {
 		if (child->type == BOX_FLOAT_LEFT ||
 		    child->type == BOX_FLOAT_RIGHT) {
@@ -517,7 +506,9 @@ box_nearest_text_box(struct box *box,
 			c_fx = fx;
 			c_fy = fy;
 		}
-		if (in_box && child->text && !child->object) {
+		/* Consider nearby text even outside its inline container. A drag
+		 * may jump past a shrink-to-fit line or through inter-line space. */
+		if (child->text && !child->object) {
 			if (box_nearer_text_box(child,
 						c_bx, c_by, x, y, dir, nearest,
 						tx, ty, nr_xd, nr_yd))
@@ -888,6 +879,11 @@ box_pick_text_box(struct html_content *html,
 			if (y > y1) y = y1;
 			if (x > x1) x = x1;
 		}
+	}
+
+	if (text_box == NULL) {
+		*dx = *dy = 0;
+		return NULL;
 	}
 
 	/* return coordinates relative to box */
