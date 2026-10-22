@@ -233,3 +233,20 @@ a short line, directional selection between lines, list markers, floating text a
 document without text.
 The past-container case failed before the search fix. This test isolates
 geometry; it does not substitute for rendering, font loading or native input.
+
+An additional OPENSTEP 4.2 test uses ordinary host input on a disposable
+VMware-framebuffer desktop. This exposed a gap in the timed acceptance batch:
+its explicit display passes could hide missing repaint dispatch in the ordinary
+application. Native AppKit did not invoke the application's `updateWindows`
+override after input. Browser invalidations now flush after `sendEvent:` returns;
+core timed callbacks retain their separate display pass. Tracking loops finish
+before this event-boundary pass runs.
+
+For the controlled input/checkbox page, temporary timing instrumentation measured
+about 2–3 ms for a 701x421 raster, conversion, upload and WindowServer round trip.
+Before the fix, key events completed without a subsequent document draw. With
+the fix, key and checkbox changes were drawn within the same dispatch, about
+2–14 ms after event entry. The ordinary optimized build was then checked without
+instrumentation: typed text, a checked checkbox and a vertically resized viewport
+were visible without an additional input event to trigger painting. These are
+local-page latency checks, not a performance claim for arbitrary websites.

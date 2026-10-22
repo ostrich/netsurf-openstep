@@ -68,6 +68,10 @@ static nserror defaults(struct nsoption_s *options)
 {
 	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	[super sendEvent:event];
+	/* Native AppKit does not dispatch our updateWindows override after each
+	 * event. Flush browser invalidations here, once tracking has unwound,
+	 * instead of leaving input and resize redraws waiting for a core timer. */
+	nextstep_display_windows();
 	[pool release];
 	return self;
 }

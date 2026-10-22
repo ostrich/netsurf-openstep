@@ -134,3 +134,21 @@ the keys that end editing. Use normal command dispatch and observe readiness.
 Also, `setSelectable:YES` makes a native TextField read-only: use
 `setEditable:YES` for input. These are API lessons, separate from GUI test
 results.
+
+## OPENSTEP input-to-paint check
+
+Verified 2026-10-21 on a disposable OPENSTEP 4.2 VMware-framebuffer desktop,
+1600x1200. Launch a local page containing an empty text input and checkbox.
+Identify the browser by its page title and derive input coordinates from its
+current document bounds. Use the VM project's existing QMP/UI helpers to move
+the pointer, press and release the button, then type ordinary host keys.
+Capture the page immediately afterward, without an extra mouse movement or a
+diagnostic timer that forces a display pass. Check typed pixels and the checkbox
+mark separately. A screenshot title alone does not establish input response.
+
+For a vertical resize, drag the middle of the native bottom resize bar upward;
+the bar is below the horizontal scroller. Derive its center from the current
+window frame. Release, then capture the new viewport without further input.
+The middle-bar route was verified; the attempted corner route did not resize
+this window. Quit the owned browser normally, then request and confirm native
+halt before stopping QEMU or checking its image.
