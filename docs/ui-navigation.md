@@ -160,3 +160,19 @@ live browser process with Workspace's `-MachLaunch` arguments and actual page
 body pixels. Verified 2026-10-21: both the disposable desktop and the running
 installed desktop use this route. Native AppKit consumes launch arguments in
 place; code using main's saved argc must account for the shorter argv afterward.
+
+## Restored native toolbar and menus
+
+Verified 2026-10-21 in the disposable OPENSTEP desktop, 1600x1200. The toolbar
+uses the existing arrow, Reload and Stop images. Back/Forward are left of the
+address field; Reload/Stop is at the right edge. The thin loading activity bar
+is directly below the field and disappears when idle. Use the current native
+window frame to locate controls; the toolbar is now 52 points high rather than
+40. Root menu rows open File, Edit, Navigate and View submenus; File exposes
+New Window and Close. Command-L remains available through Navigate.
+
+For loading tests, delay a controlled response and compare the bar and action
+image against an idle screenshot. Wait for observable pixels after mouse-up:
+QMP acknowledging release does not mean the guest has dispatched the action.
+Start repeated runs from a fresh browser page, since an old rendered page can
+remain visible during a reload and falsely satisfy a body-text readiness check.

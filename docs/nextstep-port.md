@@ -217,6 +217,13 @@ responder retain their separate native editing roles. HTML form fields receive
 Tab and backward Tab; outside editable content, arrows and Space/Shift-Space
 scroll, and Escape stops a load.
 
+The native frontend retains the OPENSTEP File/Edit/Navigate/View menu structure
+and the bundled Back, Forward, Reload and Stop images. Reload/Stop sits to the
+right of the address field. A thin activity bar below the address advances on
+load/status callbacks and clears when loading completes or is stopped; it is an
+activity estimate, not a byte-count percentage. Image lookup explicitly checks
+Resources/ because the NEXTSTEP Foundation bundle search differs from OPENSTEP.
+
 The toolbar paints its own background. Content-view size changes coalesce a
 browser reformat and a full window repaint before the document upload. This
 covers programmatic resizing as well as the window delegate notification, and

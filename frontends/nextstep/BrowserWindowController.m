@@ -5,6 +5,7 @@
 #import "schedule.h"
 #import <appkit/NXCursor.h>
 #import <appkit/ClipView.h>
+#import <appkit/Cell.h>
 #import <dpsclient/psops.h>
 #include "netsurf/browser_window.h"
 #include "netsurf/keypress.h"
@@ -71,6 +72,57 @@ static void finish_location_editing(void *context)
 }
 @end
 
+/* A single opaque view keeps the activity bar independent of text controls.
+ * Its width follows the address field; an idle bar erases its previous pixels. */
+@interface NextstepProgressView : NextstepToolbarView { float progress; BOOL pending; }
+- setProgress:(float)value;
+- displayPendingContent;
+@end
+@implementation NextstepProgressView
+- setProgress:(float)value
+{
+	progress = value;
+	pending = YES;
+	[self setNeedsDisplay:YES];
+	return self;
+}
+- displayPendingContent
+{
+	if (pending && [self canDraw]) [self display];
+	return self;
+}
+- drawSelf:(const NXRect *)rects :(int)count
+{
+	NXRect bounds;
+	pending = NO;
+	[super drawSelf:rects :count];
+	if (progress <= 0) return self;
+	[self getBounds:&bounds];
+	PSsetgray(.75);
+	NXRectFill(&bounds);
+	bounds.size.width *= progress;
+	PSsetgray(NX_DKGRAY);
+	NXRectFill(&bounds);
+	return self;
+}
+@end
+
+static NXImage *toolbar_image(NSString *name)
+{
+	NSString *path = [[NSBundle mainBundle] pathForResource:name ofType:@"tiff"];
+	/* NEXTSTEP's Foundation bundle lookup does not consistently search the
+	 * OPENSTEP-style Resources directory. Keep the shared bundle layout. */
+	if (path == nil) path = [[[NSBundle mainBundle] bundlePath]
+		stringByAppendingPathComponent:[NSString stringWithFormat:@"Resources/%@.tiff", name]];
+	return [[NXImage alloc] initFromFile:[path cString]];
+}
+static void button_image(Button *control, NXImage *image, const char *fallback)
+{
+	[control setImage:image];
+	[control setIconPosition:image ? NX_ICONONLY : NX_TITLEONLY];
+	[control setTitle:image ? "" : fallback];
+}
+
 /* sizeWindow:: resizes the view hierarchy without necessarily delivering the
  * interactive window delegate notification. Observe the content view itself. */
 @interface NextstepContentView : NextstepToolbarView {
@@ -95,7 +147,7 @@ static void finish_location_editing(void *context)
 static Button *button(View *parent, id target, const char *title, SEL action,
 		float x, float width)
 {
-	NXRect rect = NSMakeRect(x, 6, width, 28);
+	NXRect rect = NSMakeRect(x, 6, width, 40);
 	Button *control = [[Button alloc] initFrame:&rect];
 	[control setTitle:title];
 	[control setTarget:target];
@@ -113,6 +165,10 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	if (self != nil) {
 		browser = value;
 		openstepScale = 1;
+		backImage = toolbar_image(@"Left");
+		forwardImage = toolbar_image(@"Right");
+		reloadImage = toolbar_image(@"Reload");
+		stopImage = toolbar_image(@"Stop");
 		if (nextstep_browser_windows == nil)
 			nextstep_browser_windows = [NSMutableArray new];
 		[nextstep_browser_windows addObject:self];
@@ -148,15 +204,19 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	rect = NSMakeRect(0, 0, width, height);
 	content = [[NextstepContentView alloc] initFrame:&rect];
 	[window setContentView:content];
-	rect = NSMakeRect(0, height - 40, width, 40);
+	rect = NSMakeRect(0, height - 52, width, 52);
 	toolbar = [[NextstepToolbarView alloc] initFrame:&rect];
 	[toolbar setAutoresizeSubviews:YES];
 	[toolbar setAutosizing:NX_WIDTHSIZABLE | NX_MINYMARGINSIZABLE];
 	[content addSubview:toolbar];
-	backButton = button(toolbar, nativeActionTarget, "Back", @selector(back:), 6, 50);
-	forwardButton = button(toolbar, nativeActionTarget, "Forward", @selector(forward:), 60, 66);
-	refreshButton = button(toolbar, nativeActionTarget, "Reload", @selector(stopOrRefresh:), 130, 62);
-	rect = NSMakeRect(198, 9, width - 204, 22);
+	backButton = button(toolbar, nativeActionTarget, "Back", @selector(back:), 6, 40);
+	button_image(backButton, backImage, "Back");
+	forwardButton = button(toolbar, nativeActionTarget, "Forward", @selector(forward:), 50, 40);
+	button_image(forwardButton, forwardImage, "Next");
+	refreshButton = button(toolbar, nativeActionTarget, "Reload", @selector(stopOrRefresh:), width - 46, 40);
+	[refreshButton setAutosizing:NX_MINXMARGINSIZABLE];
+	button_image(refreshButton, reloadImage, "Load");
+	rect = NSMakeRect(102, 19, width - 156, 22);
 	urlBar = [[TextField alloc] initFrame:&rect];
 	[urlBar setBezeled:YES];
 	/* Native setSelectable:YES clears editability. setEditable:YES already
@@ -166,7 +226,11 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	[urlBar setAction:@selector(enterUrl:)];
 	[urlBar setAutosizing:NX_WIDTHSIZABLE];
 	[toolbar addSubview:urlBar];
-	rect = NSMakeRect(0, 0, width, height - 40);
+	rect = NSMakeRect(102, 12, width - 156, 4);
+	progressTrack = [[NextstepProgressView alloc] initFrame:&rect];
+	[progressTrack setAutosizing:NX_WIDTHSIZABLE];
+	[toolbar addSubview:progressTrack];
+	rect = NSMakeRect(0, 0, width, height - 52);
 	scrollView = [[ScrollView alloc] initFrame:&rect];
 	[scrollView setAutosizing:NX_WIDTHSIZABLE | NX_HEIGHTSIZABLE];
 	[scrollView setVertScrollerRequired:YES];
@@ -212,6 +276,7 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 		[window displayIfNeeded];
 	}
 	[plotView displayPendingContent];
+	[progressTrack displayPendingContent];
 	[window flushWindow];
 }
 - (void)dealloc
@@ -220,6 +285,10 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	[window setDelegate:nil];
 	[window free];
 	[nativeActionTarget free];
+	[backImage free];
+	[forwardImage free];
+	[reloadImage free];
+	[stopImage free];
 	[super dealloc];
 }
 - windowWillClose:sender
@@ -321,10 +390,33 @@ static Button *button(View *parent, id target, const char *title, SEL action,
 	[backButton setEnabled:browser && browser_window_back_available(browser)];
 	[forwardButton setEnabled:browser && browser_window_forward_available(browser)];
 }
-- (void)setStatusText:(NSString *)text { (void)text; }
+- (void)setStatusText:(NSString *)text
+{
+	(void)text;
+	if ([refreshButton tag] != 1) return;
+	/* Activity estimate, not a byte-count percentage. Match the OPENSTEP UI. */
+	if (openstepProgress < .15f) openstepProgress = .15f;
+	else if (openstepProgress < .90f) {
+		openstepProgress += .14f;
+		if (openstepProgress > .90f) openstepProgress = .90f;
+	}
+	[progressTrack setProgress:openstepProgress];
+}
 - (void)setTitle:(NSString *)title { [(Window *)window setTitle:[title cString]]; }
-- (void)startThrobber { [(Button *)refreshButton setTitle:"Stop"]; [refreshButton setTag:1]; }
-- (void)stopThrobber { [(Button *)refreshButton setTitle:"Reload"]; [refreshButton setTag:0]; }
+- (void)startThrobber
+{
+	button_image(refreshButton, stopImage, "Stop");
+	[refreshButton setTag:1];
+	openstepProgress = .08f;
+	[progressTrack setProgress:openstepProgress];
+}
+- (void)stopThrobber
+{
+	button_image(refreshButton, reloadImage, "Load");
+	[refreshButton setTag:0];
+	openstepProgress = 0;
+	[progressTrack setProgress:0];
+}
 - (void)back:(id)sender { (void)sender; if (browser && browser_window_back_available(browser)) browser_window_history_back(browser, false); }
 - (void)forward:(id)sender { (void)sender; if (browser && browser_window_forward_available(browser)) browser_window_history_forward(browser, false); }
 - (void)reload:(id)sender { (void)sender; if (browser) browser_window_reload(browser, true); }

@@ -260,3 +260,13 @@ the fix, key and checkbox changes were drawn within the same dispatch, about
 instrumentation: typed text, a checked checkbox and a vertically resized viewport
 were visible without an additional input event to trigger painting. These are
 local-page latency checks, not a performance claim for arbitrary websites.
+
+The native toolbar/menu restoration was checked in one bounded OPENSTEP 4.2
+batch using the ordinary optimized binary, launched through Workspace. A local
+HTTP fixture delayed its response for eight seconds. Pixel comparisons checked
+activity-bar visibility, clearing on completion and Stop, and Reload/Stop image
+changes. Server-observed requests and rendered page text checked Reload, Back,
+Forward and the Navigate submenu's Command-L shortcut. Input and checkbox
+redraws also passed without an extra event. The File submenu and a vertically
+resized viewport were reviewed in captures. All four ordinary architecture
+slices compile; these additional runtime checks cover Intel OPENSTEP only.

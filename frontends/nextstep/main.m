@@ -138,6 +138,14 @@ static void add_item(Menu *menu, const char *title, SEL action,
 	[cell setTarget:target];
 }
 
+static Menu *add_submenu(Menu *parent, const char *title)
+{
+	Menu *menu = [[Menu alloc] initTitle:title];
+	id cell = [parent addItem:title action:NULL keyEquivalent:0];
+	[parent setSubmenu:menu forItem:cell];
+	return menu;
+}
+
 static int failed(const char *step, int error)
 {
 	fprintf(stderr, "NetSurf: %s failed (%d)\n", step, error);
@@ -149,7 +157,7 @@ int main(int argc, char **argv)
 	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	NextstepApplication *app;
 	NextstepDelegate *delegate;
-	Menu *menu;
+	Menu *menu, *file, *edit, *navigate, *view;
 	NSString *font_path, *prefs;
 	nserror error;
 	BOOL smoke = argc == 2 && strcmp(argv[1], "--smoke-test") == 0;
@@ -217,22 +225,27 @@ int main(int argc, char **argv)
 	delegate = [NextstepDelegate new];
 	[app setDelegate:delegate];
 	menu = [[Menu alloc] initTitle:"NetSurf"];
-	add_item(menu, "New window", @selector(newWindow:), 'n', delegate);
-	add_item(menu, "Close", @selector(performClose:), 'w', nil);
-	add_item(menu, "Open location...", @selector(focusLocation:), 'l', delegate);
-	add_item(menu, "Cut", @selector(cut:), 'x', nil);
-	add_item(menu, "Copy", @selector(copy:), 'c', nil);
-	add_item(menu, "Paste", @selector(paste:), 'v', nil);
-	add_item(menu, "Select all", @selector(selectAll:), 'a', nil);
-	add_item(menu, "Back", @selector(back:), '[', delegate);
-	add_item(menu, "Forward", @selector(forward:), ']', delegate);
-	add_item(menu, "Reload", @selector(reload:), 'r', delegate);
-	add_item(menu, "Stop", @selector(stopLoading:), '.', delegate);
-	add_item(menu, "Zoom in", @selector(zoomIn:), '+', delegate);
-	add_item(menu, "Zoom out", @selector(zoomOut:), '-', delegate);
-	add_item(menu, "Actual size", @selector(resetZoom:), '0', delegate);
+	file = add_submenu(menu, "File");
+	add_item(file, "New Window", @selector(newWindow:), 'n', delegate);
+	add_item(file, "Close", @selector(performClose:), 'w', nil);
+	edit = add_submenu(menu, "Edit");
+	add_item(edit, "Cut", @selector(cut:), 'x', nil);
+	add_item(edit, "Copy", @selector(copy:), 'c', nil);
+	add_item(edit, "Paste", @selector(paste:), 'v', nil);
+	add_item(edit, "Select All", @selector(selectAll:), 'a', nil);
+	navigate = add_submenu(menu, "Navigate");
+	add_item(navigate, "Open Location...", @selector(focusLocation:), 'l', delegate);
+	add_item(navigate, "Back", @selector(back:), '[', delegate);
+	add_item(navigate, "Forward", @selector(forward:), ']', delegate);
+	add_item(navigate, "Reload", @selector(reload:), 'r', delegate);
+	add_item(navigate, "Stop", @selector(stopLoading:), '.', delegate);
+	view = add_submenu(menu, "View");
+	add_item(view, "Zoom In", @selector(zoomIn:), '+', delegate);
+	add_item(view, "Zoom Out", @selector(zoomOut:), '-', delegate);
+	add_item(view, "Actual Size", @selector(resetZoom:), '0', delegate);
 	add_item(menu, "Hide", @selector(hide:), 'h', app);
 	add_item(menu, "Quit", @selector(terminate:), 'q', app);
+	[file sizeToFit]; [edit sizeToFit]; [navigate sizeToFit]; [view sizeToFit];
 	[menu sizeToFit];
 	[app setMainMenu:menu];
 	[delegate appDidInit:app];
